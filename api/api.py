@@ -11,8 +11,11 @@ app = Flask(__name__)
 
 # register blueprints
 from routes.athletes import athletes_bp
+from routes.coaches import coaches_bp
 
 app.register_blueprint(athletes_bp);
+app.register_blueprint(coaches_bp);
+
 
 # def get_db_conn():
 #     conn = sql.connect(db_path)
