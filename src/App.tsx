@@ -1,11 +1,15 @@
 import { useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
-function App() {
+import AthletesPage from './pages/AthletesPage'
+
+export default function App() {
   return (
-    <div>
-    <h1>cmpt354 dbms project</h1>
-    </div>
+    <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<AthletesPage />} />
+      <Route path="/athletes" element={<AthletesPage />} />
+    </Routes>
+    </BrowserRouter>
   )
 }
-
-export default App

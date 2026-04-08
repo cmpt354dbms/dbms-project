@@ -21,11 +21,45 @@ def get_athletes():
     db = get_db_conn()
     try:
         cur = db.cursor()
+
+        # initial sql query 
+        # cur.execute("""
+        #    SELECT a.id, a.name, a.email, a.highSchool, h.division,
+        #         CASE
+        #             WHEN g.athleteID IS NOT NULL THEN 'Guard'
+        #             WHEN f.athleteID IS NOT NULL THEN 'Forward'
+        #             WHEN c.athleteID IS NOT NULL THEN 'Centre'
+        #             ELSE NULL
+        #         END AS position
+        #     FROM Athlete a
+        #     LEFT JOIN HighSchool h ON a.highSchool = h.name
+        #     LEFT JOIN Guard g ON a.id = g.athleteID
+        #     LEFT JOIN Forward f ON a.id = f.athleteID
+        #     LEFT JOIN Centre c ON a.id = c.athleteID
+        # """)
+        
+        # sql query with game stats as well
+
         cur.execute("""
-        SELECT a.id, a.name, a.email, a.highSchool, h.division
-        FROM Athlete a
-        LEFT JOIN HighSchool h ON a.highSchool = h.name
-        """)
+            SELECT a.id, a.name, a.email, a.highSchool, h.division,
+                CASE
+                    WHEN g.athleteID IS NOT NULL THEN 'Guard'
+                    WHEN f.athleteID IS NOT NULL THEN 'Forward'
+                    WHEN c.athleteID IS NOT NULL THEN 'Centre'
+                    ELSE NULL
+                END AS position,
+                gs.points, gs.rebounds, gs.assists, gs.steals,
+                gs.blocks, gs.fouls, gs.shotsMade, gs.shotsAttempted,
+                gs.threePointersMade, gs.freeThrowsMade, gs.freeThrowsAttempted,
+                gs.gameID, gm.gameDate
+            FROM Athlete a
+            LEFT JOIN HighSchool h ON a.highSchool = h.name
+            LEFT JOIN Guard g ON a.id = g.athleteID
+            LEFT JOIN Forward f ON a.id = f.athleteID
+            LEFT JOIN Centre c ON a.id = c.athleteID
+            LEFT JOIN GameStats gs ON a.id = gs.athleteID
+            LEFT JOIN Game gm ON gs.gameID = gm.gameID
+                    """)
         rows = cur.fetchall()
         return jsonify([dict(row) for row in rows])
     finally:
