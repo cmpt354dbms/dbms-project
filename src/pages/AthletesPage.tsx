@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getAthletes, deleteAthlete } from '../api'
  // import type { Athlete } from '../types'
 import type { AthleteWithStats } from '../types'
-
+import PlayerCard from './PlayerCard'
 
 export default function AthletesPage() {
   const navigate = useNavigate()
@@ -26,12 +26,20 @@ export default function AthletesPage() {
     setAthletes(prev => prev.filter(a => a.id !== id))
   }
 
+  const getGamesForAthlete = (athleteID: number) => {
+    return athletes.filter(a => a.id === athleteID && a.points != null)
+  }
+
   const toggleExpand = (id: number) => {
     setExpandedID(prev => prev === id ? null : id)
   }
 
   const filtered = athletes.filter(a =>
     filter === 'All' ? true : a.position === filter
+  )
+
+  const uniqueAthletes = Array.from(
+    new Map(filtered.map(a => [a.id, a])).values()
   )
 
   if (loading) return <p>Loading...</p>
@@ -73,7 +81,7 @@ export default function AthletesPage() {
           </tr>
         </thead>
         <tbody>
-          {filtered.map(a => (
+          {uniqueAthletes.map(a => (
             <>
               <tr key={a.id}>
                 <td>{a.id}</td>
@@ -103,7 +111,7 @@ export default function AthletesPage() {
               {expandedID === a.id && (
                 <tr key={`${a.id}-stats`}>
                   <td colSpan={8}>
-                    {a.points != null ? (
+                    {getGamesForAthlete(a.id).length > 0 ? (
                       <table>
                         <thead>
                           <tr>
@@ -120,18 +128,20 @@ export default function AthletesPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          <tr>
-                            <td>{a.gameDate ?? '—'}</td>
-                            <td>{a.points}</td>
-                            <td>{a.rebounds}</td>
-                            <td>{a.assists}</td>
-                            <td>{a.steals}</td>
-                            <td>{a.blocks}</td>
-                            <td>{a.fouls}</td>
-                            <td>{a.shotsMade}/{a.shotsAttempted}</td>
-                            <td>{a.threePointersMade}</td>
-                            <td>{a.freeThrowsMade}/{a.freeThrowsAttempted}</td>
-                          </tr>
+                          {getGamesForAthlete(a.id).map(game => (
+                            <tr key={`${game.id}-${game.gameID}`}>
+                              <td>{game.gameDate ?? '—'}</td>
+                              <td>{game.points}</td>
+                              <td>{game.rebounds}</td>
+                              <td>{game.assists}</td>
+                              <td>{game.steals}</td>
+                              <td>{game.blocks}</td>
+                              <td>{game.fouls}</td>
+                              <td>{game.shotsMade}/{game.shotsAttempted}</td>
+                              <td>{game.threePointersMade}</td>
+                              <td>{game.freeThrowsMade}/{game.freeThrowsAttempted}</td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     ) : (
@@ -145,7 +155,7 @@ export default function AthletesPage() {
         </tbody>
       </table>
 
-      {filtered.length === 0 && <p>No athletes found.</p>}
+      {uniqueAthletes.length === 0 && <p>No athletes found.</p>}
 
       {/* extract as component */}
       {/* modal */}
@@ -156,30 +166,8 @@ export default function AthletesPage() {
           background: 'rgba(0,0,0,0.5)',
           display: 'flex', alignItems: 'center', justifyContent: 'center'
         }}>
-          <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', minWidth: '400px' }}>
-            <h2>{modalAthlete.name}</h2>
-            <p><strong>Email:</strong> {modalAthlete.email}</p>
-            <p><strong>High School:</strong> {modalAthlete.highSchool}</p>
-            <p><strong>Division:</strong> {modalAthlete.division ?? '—'}</p>
-            <p><strong>Position:</strong> {modalAthlete.position ?? '—'}</p>
-            <hr />
-            <h3>Game Stats</h3>
-            {modalAthlete.points != null ? (
-              <>
-                <p><strong>Date:</strong> {modalAthlete.gameDate ?? '—'}</p>
-                <p><strong>Points:</strong> {modalAthlete.points}</p>
-                <p><strong>Rebounds:</strong> {modalAthlete.rebounds}</p>
-                <p><strong>Assists:</strong> {modalAthlete.assists}</p>
-                <p><strong>Steals:</strong> {modalAthlete.steals}</p>
-                <p><strong>Blocks:</strong> {modalAthlete.blocks}</p>
-                <p><strong>Fouls:</strong> {modalAthlete.fouls}</p>
-                <p><strong>FG:</strong> {modalAthlete.shotsMade}/{modalAthlete.shotsAttempted}</p>
-                <p><strong>3PM:</strong> {modalAthlete.threePointersMade}</p>
-                <p><strong>FT:</strong> {modalAthlete.freeThrowsMade}/{modalAthlete.freeThrowsAttempted}</p>
-              </>
-            ) : (
-              <p>No game stats available.</p>
-            )}
+          <div>
+            <PlayerCard games={getGamesForAthlete(modalAthlete.id)} />
             <button onClick={() => setModalAthlete(null)}>Close</button>
           </div>
         </div>
