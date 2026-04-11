@@ -27,3 +27,6 @@ dist-ssr
 api/.env
 api/venv/
 node_modules/
+
+__pycache__/
+*.pyc
