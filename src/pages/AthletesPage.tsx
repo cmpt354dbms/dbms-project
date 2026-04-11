@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAthletes, deleteAthlete } from '../api'
+import { getAthletes, deleteAthlete, getAthleteGames } from '../api'
 import type { AthleteWithStats } from '../types'
 import PlayerCardBrief from '../components/PlayerCardBrief'
 import PlayerCard from '../components/PlayerCard'
@@ -51,6 +51,8 @@ export default function AthletesPage() {
 
   // ─── Modal ────────────────────────────────────────────────────
   const [playerCard, setPlayerCard] = useState<AthleteWithStats | null>(null)
+  const [playerGames, setPlayerGames] = useState<AthleteWithStats[]>([])
+  const [loadingPlayerGames, setLoadingPlayerGames] = useState(false)
 
   // ─── Data Fetching ────────────────────────────────────────────
   // on mount, fetch athletes then derive schools, divisions, and date range
@@ -101,8 +103,23 @@ export default function AthletesPage() {
     setAthletes(prev => prev.filter(a => a.id !== id))
   }
 
-  const getGamesForAthlete = (athleteID: number) => {
-    return athletes.filter(a => a.id === athleteID && a.points != null)
+  const openPlayerCard = async (athlete: AthleteWithStats) => {
+    setPlayerCard(athlete)
+    setPlayerGames([])
+    setLoadingPlayerGames(true)
+
+    try {
+      const games = await getAthleteGames(athlete.id)
+      setPlayerGames(games.filter(g => g.points != null))
+    } finally {
+      setLoadingPlayerGames(false)
+    }
+  }
+
+  const closePlayerCard = () => {
+    setPlayerCard(null)
+    setPlayerGames([])
+    setLoadingPlayerGames(false)
   }
 
   // ─── Filtering & Sorting ──────────────────────────────────────
@@ -223,7 +240,7 @@ export default function AthletesPage() {
           <PlayerCardBrief
             key={a.id}
             athlete={a}
-            onClick={() => setPlayerCard(a)}
+            onClick={() => openPlayerCard(a)}
             onEdit={() => navigate(`/athletes/${a.id}/edit`)}
             onDelete={() => handleDelete(a.id)}
           />
@@ -234,7 +251,23 @@ export default function AthletesPage() {
 
       {/* ── Detail Modal ───────────────────────────────────────── */}
       {playerCard && (
-        <PlayerCard games={getGamesForAthlete(playerCard.id)} onClose={() => setPlayerCard(null)} />
+        <div className="modal-overlay" onClick={closePlayerCard}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+              <button className="btn btn-ghost btn-sm" onClick={closePlayerCard}>
+                Close
+              </button>
+            </div>
+            {loadingPlayerGames ? (
+              <p>Loading games...</p>
+            ) : (
+              <PlayerCard
+                games={playerGames.length > 0 ? playerGames : [playerCard]}
+                onClose={closePlayerCard}
+              />
+            )}
+          </div>
+        </div>
       )}
     </div>
   )
