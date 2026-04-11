@@ -12,8 +12,12 @@ export default function AthletesPage() {
   const [allSchools, setAllSchools] = useState<string[]>([])
   const [selectedSchools, setSelectedSchools] = useState<Set<string>>(new Set())
   const [schoolDropdownOpen, setSchoolDropdownOpen] = useState(false)
-  const [positionFilter, setPositionFilter] = useState<string>('All')
-  const [divisionFilter, setDivisionFilter] = useState<string>('All')
+  const allPositions = ['Guard', 'Forward', 'Centre']
+  const [selectedPositions, setSelectedPositions] = useState<Set<string>>(new Set(allPositions))
+  const [positionDropdownOpen, setPositionDropdownOpen] = useState(false)
+  const [allDivisions, setAllDivisions] = useState<string[]>([])
+  const [selectedDivisions, setSelectedDivisions] = useState<Set<string>>(new Set())
+  const [divisionDropdownOpen, setDivisionDropdownOpen] = useState(false)
   const [sortKey, setSortKey] = useState<string>('name')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
   const [expandedID, setExpandedID] = useState<number | null>(null)
@@ -26,6 +30,9 @@ export default function AthletesPage() {
         const names = schoolData.map(s => s.name).sort()
         setAllSchools(names)
         setSelectedSchools(new Set(names))
+        const divs = [...new Set(athleteData.map(a => a.division).filter(Boolean))].sort()
+        setAllDivisions(divs)
+        setSelectedDivisions(new Set(divs))
       })
       .finally(() => setLoading(false))
   }, [])
@@ -41,12 +48,10 @@ export default function AthletesPage() {
     setExpandedID(prev => prev === id ? null : id)
   }
 
-  const uniqueDivisions = [...new Set(athletes.map(a => a.division))].sort()
-
   const filtered = athletes
-    .filter(a => positionFilter === 'All' || a.position === positionFilter)
+    .filter(a => selectedPositions.has(a.position))
     .filter(a => selectedSchools.has(a.highSchool))
-    .filter(a => divisionFilter === 'All' || a.division === divisionFilter)
+    .filter(a => selectedDivisions.has(a.division))
     .sort((a, b) => {
       let cmp = 0
       switch (sortKey) {
@@ -75,23 +80,59 @@ export default function AthletesPage() {
       </button>
 
       {/* filters */}
-      <div style={{ marginBottom: '1rem' }}>
-        <div style={{ marginBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        {/* position dropdown */}
+        <div style={{ position: 'relative' }}>
           <strong>Position: </strong>
-          {['All', 'Guard', 'Forward', 'Centre'].map(pos => (
-            <button
-              key={pos}
-              onClick={() => setPositionFilter(pos)}
-              style={{ fontWeight: positionFilter === pos ? 'bold' : 'normal', marginRight: '0.25rem' }}
-            >
-              {pos}
-            </button>
-          ))}
+          <button onClick={() => { setPositionDropdownOpen(prev => !prev); setSchoolDropdownOpen(false); setDivisionDropdownOpen(false) }}>
+            {selectedPositions.size === allPositions.length
+              ? 'All Positions'
+              : selectedPositions.size === 0
+                ? 'None Selected'
+                : `${selectedPositions.size} Selected`}
+            {positionDropdownOpen ? ' ▲' : ' ▼'}
+          </button>
+          {positionDropdownOpen && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, zIndex: 10,
+              background: 'white', border: '1px solid #ccc', borderRadius: '4px',
+              padding: '0.5rem', minWidth: '180px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+            }}>
+              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedPositions.size === allPositions.length}
+                  onChange={() => {
+                    if (selectedPositions.size === allPositions.length) setSelectedPositions(new Set())
+                    else setSelectedPositions(new Set(allPositions))
+                  }}
+                />{' '}Select All
+              </label>
+              <hr style={{ margin: '0.25rem 0' }} />
+              {allPositions.map(p => (
+                <label key={p} style={{ display: 'block', marginBottom: '0.25rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedPositions.has(p)}
+                    onChange={() => {
+                      setSelectedPositions(prev => {
+                        const next = new Set(prev)
+                        if (next.has(p)) next.delete(p)
+                        else next.add(p)
+                        return next
+                      })
+                    }}
+                  />{' '}{p}
+                </label>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div style={{ marginBottom: '0.5rem', position: 'relative' }}>
+        {/* school dropdown */}
+        <div style={{ position: 'relative' }}>
           <strong>School: </strong>
-          <button onClick={() => setSchoolDropdownOpen(prev => !prev)}>
+          <button onClick={() => { setSchoolDropdownOpen(prev => !prev); setPositionDropdownOpen(false); setDivisionDropdownOpen(false) }}>
             {selectedSchools.size === allSchools.length
               ? 'All Schools'
               : selectedSchools.size === 0
@@ -101,7 +142,7 @@ export default function AthletesPage() {
           </button>
           {schoolDropdownOpen && (
             <div style={{
-              position: 'absolute', top: '100%', left: '70px', zIndex: 10,
+              position: 'absolute', top: '100%', left: 0, zIndex: 10,
               background: 'white', border: '1px solid #ccc', borderRadius: '4px',
               padding: '0.5rem', minWidth: '250px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
             }}>
@@ -110,11 +151,8 @@ export default function AthletesPage() {
                   type="checkbox"
                   checked={selectedSchools.size === allSchools.length}
                   onChange={() => {
-                    if (selectedSchools.size === allSchools.length) {
-                      setSelectedSchools(new Set())
-                    } else {
-                      setSelectedSchools(new Set(allSchools))
-                    }
+                    if (selectedSchools.size === allSchools.length) setSelectedSchools(new Set())
+                    else setSelectedSchools(new Set(allSchools))
                   }}
                 />{' '}Select All
               </label>
@@ -139,23 +177,52 @@ export default function AthletesPage() {
           )}
         </div>
 
-        <div style={{ marginBottom: '0.5rem' }}>
+        {/* division dropdown */}
+        <div style={{ position: 'relative' }}>
           <strong>Division: </strong>
-          <button
-            onClick={() => setDivisionFilter('All')}
-            style={{ fontWeight: divisionFilter === 'All' ? 'bold' : 'normal', marginRight: '0.25rem' }}
-          >
-            All
+          <button onClick={() => { setDivisionDropdownOpen(prev => !prev); setPositionDropdownOpen(false); setSchoolDropdownOpen(false) }}>
+            {selectedDivisions.size === allDivisions.length
+              ? 'All Divisions'
+              : selectedDivisions.size === 0
+                ? 'None Selected'
+                : `${selectedDivisions.size} Selected`}
+            {divisionDropdownOpen ? ' ▲' : ' ▼'}
           </button>
-          {uniqueDivisions.map(d => (
-            <button
-              key={d}
-              onClick={() => setDivisionFilter(d)}
-              style={{ fontWeight: divisionFilter === d ? 'bold' : 'normal', marginRight: '0.25rem' }}
-            >
-              {d}
-            </button>
-          ))}
+          {divisionDropdownOpen && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, zIndex: 10,
+              background: 'white', border: '1px solid #ccc', borderRadius: '4px',
+              padding: '0.5rem', minWidth: '150px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+            }}>
+              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedDivisions.size === allDivisions.length}
+                  onChange={() => {
+                    if (selectedDivisions.size === allDivisions.length) setSelectedDivisions(new Set())
+                    else setSelectedDivisions(new Set(allDivisions))
+                  }}
+                />{' '}Select All
+              </label>
+              <hr style={{ margin: '0.25rem 0' }} />
+              {allDivisions.map(d => (
+                <label key={d} style={{ display: 'block', marginBottom: '0.25rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedDivisions.has(d)}
+                    onChange={() => {
+                      setSelectedDivisions(prev => {
+                        const next = new Set(prev)
+                        if (next.has(d)) next.delete(d)
+                        else next.add(d)
+                        return next
+                      })
+                    }}
+                  />{' '}{d}
+                </label>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
