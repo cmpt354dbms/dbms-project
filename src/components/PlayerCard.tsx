@@ -7,6 +7,7 @@ import type { AthleteWithStats } from '../types'
 // With multiple games: <PlayerCard games={allGamesForAthlete} />
 interface PlayerCardProps {
   games: AthleteWithStats[]
+  onClose?: () => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
