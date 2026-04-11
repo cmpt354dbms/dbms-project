@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getAthletes, deleteAthlete } from '../api'
  // import type { Athlete } from '../types'
 import type { AthleteWithStats } from '../types'
 
 
 export default function AthletesPage() {
+  const navigate = useNavigate()
   const [athletes, setAthletes] = useState<AthleteWithStats[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('All')
@@ -38,6 +40,11 @@ export default function AthletesPage() {
   return (
     <div>
       <h1>Athletes</h1>
+
+      {/* add athlete button */}
+      <button onClick={() => navigate('/athletes/new')}>
+        + Add Athlete
+      </button>
 
       {/* position filter */}
       <div>
@@ -87,6 +94,7 @@ export default function AthletesPage() {
                   </button>
                 </td>
                 <td>
+                  <button onClick={() => navigate(`/athletes/${a.id}/edit`)}>Edit</button>
                   <button onClick={() => handleDelete(a.id)}>Delete</button>
                 </td>
               </tr>
@@ -139,6 +147,7 @@ export default function AthletesPage() {
 
       {filtered.length === 0 && <p>No athletes found.</p>}
 
+      {/* extract as component */}
       {/* modal */}
       {modalAthlete && (
         <div style={{
