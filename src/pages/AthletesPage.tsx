@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAthletes, getSchools, deleteAthlete } from '../api'
 import type { AthleteWithStats } from '../types'
+import AthleteCard from '../components/AthleteCard'
 import AthleteModal from '../components/AthleteModal'
 
 
@@ -20,7 +21,6 @@ export default function AthletesPage() {
   const [divisionDropdownOpen, setDivisionDropdownOpen] = useState(false)
   const [sortKey, setSortKey] = useState<string>('name')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
-  const [expandedID, setExpandedID] = useState<number | null>(null)
   const [modalAthlete, setModalAthlete] = useState<AthleteWithStats | null>(null)
 
   useEffect(() => {
@@ -42,10 +42,6 @@ export default function AthletesPage() {
     if (!confirmed) return
     await deleteAthlete(id)
     setAthletes(prev => prev.filter(a => a.id !== id))
-  }
-
-  const toggleExpand = (id: number) => {
-    setExpandedID(prev => prev === id ? null : id)
   }
 
   const filtered = athletes
@@ -254,91 +250,22 @@ export default function AthletesPage() {
         </button>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>High School</th>
-            <th>Division</th>
-            <th>Position</th>
-            <th>Stats</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map(a => (
-            <>
-              <tr key={a.id}>
-                <td>{a.id}</td>
-                {/* clicking name opens modal */}
-                <td>
-                  <button onClick={() => setModalAthlete(a)}>
-                    {a.name}
-                  </button>
-                </td>
-                <td>{a.email}</td>
-                <td>{a.highSchool}</td>
-                <td>{a.division ?? '—'}</td>
-                <td>{a.position ?? '—'}</td>
-                <td>
-                  {/* toggle inline stats */}
-                  <button onClick={() => toggleExpand(a.id)}>
-                    {expandedID === a.id ? 'Hide' : 'Show'}
-                  </button>
-                </td>
-                <td>
-                  <button onClick={() => navigate(`/athletes/${a.id}/edit`)}>Edit</button>
-                  <button onClick={() => handleDelete(a.id)}>Delete</button>
-                </td>
-              </tr>
-
-              {/* inline stats row */}
-              {expandedID === a.id && (
-                <tr key={`${a.id}-stats`}>
-                  <td colSpan={8}>
-                    {a.points != null ? (
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>Game Date</th>
-                            <th>PTS</th>
-                            <th>REB</th>
-                            <th>AST</th>
-                            <th>STL</th>
-                            <th>BLK</th>
-                            <th>FOULS</th>
-                            <th>FGM/FGA</th>
-                            <th>3PM</th>
-                            <th>FTM/FTA</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td>{a.gameDate ?? '—'}</td>
-                            <td>{a.points}</td>
-                            <td>{a.rebounds}</td>
-                            <td>{a.assists}</td>
-                            <td>{a.steals}</td>
-                            <td>{a.blocks}</td>
-                            <td>{a.fouls}</td>
-                            <td>{a.shotsMade}/{a.shotsAttempted}</td>
-                            <td>{a.threePointersMade}</td>
-                            <td>{a.freeThrowsMade}/{a.freeThrowsAttempted}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    ) : (
-                      <p>No game stats available.</p>
-                    )}
-                  </td>
-                </tr>
-              )}
-            </>
-          ))}
-        </tbody>
-      </table>
+      {/* athlete card grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+        gap: '1rem',
+      }}>
+        {filtered.map(a => (
+          <AthleteCard
+            key={a.id}
+            athlete={a}
+            onClick={() => setModalAthlete(a)}
+            onEdit={() => navigate(`/athletes/${a.id}/edit`)}
+            onDelete={() => handleDelete(a.id)}
+          />
+        ))}
+      </div>
 
       {filtered.length === 0 && <p>No athletes found.</p>}
 
