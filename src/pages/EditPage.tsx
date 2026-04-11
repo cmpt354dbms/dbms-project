@@ -12,8 +12,16 @@ export default function AthleteEditPage() {
     highSchool: '',
     position: 'Guard'
   })
+  const [schools, setSchools] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    // fetch schools for dropdown
+    fetch('/api/schools')
+      .then(res => res.json())
+      .then(data => setSchools(data.map((s: { name: string }) => s.name)))
+  }, [])
 
   useEffect(() => {
     getAthletes().then(athletes => {
@@ -69,10 +77,14 @@ export default function AthleteEditPage() {
 
       <div>
         <label>High School</label>
-        <input
-          value={form.highSchool}
-          onChange={e => setForm({ ...form, highSchool: e.target.value })}
-        />
+          <select
+            value={form.highSchool}
+            onChange={e => setForm({ ...form, highSchool: e.target.value })}
+          >
+            {schools.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
       </div>
 
       <div>
