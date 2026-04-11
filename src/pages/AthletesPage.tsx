@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAthletes, getSchools, deleteAthlete } from '../api'
+import { getAthletes, deleteAthlete } from '../api'
 import type { AthleteWithStats } from '../types'
 import PlayerCardBrief from '../components/PlayerCardBrief'
 import PlayerCard from '../components/PlayerCard'
@@ -53,27 +53,27 @@ export default function AthletesPage() {
   const [playerCard, setPlayerCard] = useState<AthleteWithStats | null>(null)
 
   // ─── Data Fetching ────────────────────────────────────────────
-  // on mount, fetch athletes + schools in parallel, then derive
-  // the unique divisions and date range from the athlete data
+  // on mount, fetch athletes then derive schools, divisions, and date range
   useEffect(() => {
-    Promise.all([getAthletes(), getSchools()])
-      .then(([athleteData, schoolData]) => {
+    getAthletes()
+      .then(athleteData => {
         setAthletes(athleteData)
 
-        // schools come from the HighSchool table (not derived from athletes)
-        const names = schoolData.map(s => s.name).sort()
+        // derive unique schools from athlete data
+        const names = [...new Set(athleteData.map(a => a.highSchool))].sort()
         setAllSchools(names)
         setSelectedSchools(new Set(names))
 
-        // divisions are derived from athlete data
-        const divs = [...new Set(athleteData.map(a => a.division).filter(Boolean))].sort()
+        // derive unique divisions from athlete data
+        const divs = [...new Set(athleteData.map(a => a.division).filter(Boolean))] as string[]
+        divs.sort()
         setAllDivisions(divs)
         setSelectedDivisions(new Set(divs))
 
         // date bounds for the range slider (epoch-ms timestamps)
         const dates = athleteData
           .map(a => a.gameDate)
-          .filter(Boolean)
+          .filter((d): d is string => Boolean(d))
           .map(d => new Date(d).getTime())
         if (dates.length > 0) {
           const min = Math.min(...dates)
