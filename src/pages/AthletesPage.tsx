@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAthletes, getSchools, deleteAthlete } from '../api'
 import type { AthleteWithStats } from '../types'
-import AthleteCard from '../components/AthleteCard'
-import AthleteModal from '../components/AthleteModal'
+import PlayerCardBrief from '../components/PlayerCardBrief'
+import PlayerCard from '../components/PlayerCard'
 import CheckboxDropdown from '../components/CheckboxDropdown'
 import DateRangeSlider from '../components/DateRangeSlider'
 
@@ -50,7 +50,7 @@ export default function AthletesPage() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
   // ─── Modal ────────────────────────────────────────────────────
-  const [modalAthlete, setModalAthlete] = useState<AthleteWithStats | null>(null)
+  const [playerCard, setPlayerCard] = useState<AthleteWithStats | null>(null)
 
   // ─── Data Fetching ────────────────────────────────────────────
   // on mount, fetch athletes + schools in parallel, then derive
@@ -216,10 +216,10 @@ export default function AthletesPage() {
       {/* grid flows left→right, top→bottom, matching the sort order */}
       <div className="card-grid">
         {filtered.map(a => (
-          <AthleteCard
+          <PlayerCardBrief
             key={a.id}
             athlete={a}
-            onClick={() => setModalAthlete(a)}
+            onClick={() => setPlayerCard(a)}
             onEdit={() => navigate(`/athletes/${a.id}/edit`)}
             onDelete={() => handleDelete(a.id)}
           />
@@ -229,8 +229,8 @@ export default function AthletesPage() {
       {filtered.length === 0 && <p className="empty-state">No athletes found.</p>}
 
       {/* ── Detail Modal ───────────────────────────────────────── */}
-      {modalAthlete && (
-        <AthleteModal athlete={modalAthlete} onClose={() => setModalAthlete(null)} />
+      {playerCard && (
+        <PlayerCard athlete={playerCard} onClose={() => setPlayerCard(null)} />
       )}
     </div>
   )

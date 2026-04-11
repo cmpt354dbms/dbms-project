@@ -1,13 +1,13 @@
 import type { AthleteWithStats } from '../types'
 
-interface AthleteCardProps {
+interface PlayerCardBriefProps {
   athlete: AthleteWithStats
   onClick: () => void
   onEdit: () => void
   onDelete: () => void
 }
 
-export default function AthleteCard({ athlete, onClick, onEdit, onDelete }: AthleteCardProps) {
+export default function PlayerCardBrief({ athlete, onClick, onEdit, onDelete }: PlayerCardBriefProps) {
   return (
     <div className="athlete-card" onClick={onClick}>
       <div className="athlete-card-header">

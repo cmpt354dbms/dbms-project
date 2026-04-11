@@ -1,11 +1,11 @@
 import type { AthleteWithStats } from '../types'
 
-interface AthleteModalProps {
+interface PlayerCardProps {
   athlete: AthleteWithStats
   onClose: () => void
 }
 
-export default function AthleteModal({ athlete, onClose }: AthleteModalProps) {
+export default function PlayerCard({ athlete, onClose }: PlayerCardProps) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
