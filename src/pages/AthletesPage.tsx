@@ -1,27 +1,102 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAthletes, deleteAthlete } from '../api'
- // import type { Athlete } from '../types'
 import type { AthleteWithStats } from '../types'
+import PlayerCardBrief from '../components/PlayerCardBrief'
 import PlayerCard from '../components/PlayerCard'
+import CheckboxDropdown from '../components/CheckboxDropdown'
+import DateRangeSlider from '../components/DateRangeSlider'
+
+/** Sort options available for the athlete grid */
+const SORT_OPTIONS = [
+  { key: 'name',     label: 'Name' },
+  { key: 'id',       label: 'ID' },
+  { key: 'points',   label: 'Points' },
+  { key: 'rebounds',  label: 'Rebounds' },
+  { key: 'assists',   label: 'Assists' },
+  { key: 'steals',    label: 'Steals' },
+  { key: 'blocks',    label: 'Blocks' },
+]
+
+const ALL_POSITIONS = ['Guard', 'Forward', 'Centre']
+
 
 export default function AthletesPage() {
   const navigate = useNavigate()
+
+  // ─── Data ─────────────────────────────────────────────────────
   const [athletes, setAthletes] = useState<AthleteWithStats[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<string>('All')
-  const [expandedID, setExpandedID] = useState<number | null>(null)
-  const [modalAthlete, setModalAthlete] = useState<AthleteWithStats | null>(null)
 
+  // ─── Filter: checkbox dropdowns ───────────────────────────────
+  const [allSchools, setAllSchools] = useState<string[]>([])
+  const [selectedSchools, setSelectedSchools] = useState<Set<string>>(new Set())
+  const [selectedPositions, setSelectedPositions] = useState<Set<string>>(new Set(ALL_POSITIONS))
+  const [allDivisions, setAllDivisions] = useState<string[]>([])
+  const [selectedDivisions, setSelectedDivisions] = useState<Set<string>>(new Set())
+
+  // tracks which dropdown (if any) is currently open
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+
+  // ─── Filter: no-stats toggle & date range ─────────────────────
+  const [showNoStats, setShowNoStats] = useState(true)
+  const [dateMin, setDateMin] = useState(0)
+  const [dateMax, setDateMax] = useState(0)
+  const [dateStart, setDateStart] = useState(0)
+  const [dateEnd, setDateEnd] = useState(0)
+
+  // ─── Sorting ──────────────────────────────────────────────────
+  const [sortKey, setSortKey] = useState<string>('name')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
+  // ─── Modal ────────────────────────────────────────────────────
+  const [playerCard, setPlayerCard] = useState<AthleteWithStats | null>(null)
+
+  // ─── Data Fetching ────────────────────────────────────────────
+  // on mount, fetch athletes then derive schools, divisions, and date range
   useEffect(() => {
     getAthletes()
-      .then(setAthletes)
+      .then(athleteData => {
+        setAthletes(athleteData)
+
+        // derive unique schools from athlete data
+        const names = [...new Set(athleteData.map(a => a.highSchool))].sort()
+        setAllSchools(names)
+        setSelectedSchools(new Set(names))
+
+        // derive unique divisions from athlete data
+        const divs = [...new Set(athleteData.map(a => a.division).filter(Boolean))] as string[]
+        divs.sort()
+        setAllDivisions(divs)
+        setSelectedDivisions(new Set(divs))
+
+        // date bounds for the range slider (epoch-ms timestamps)
+        const dates = athleteData
+          .map(a => a.gameDate)
+          .filter((d): d is string => Boolean(d))
+          .map(d => new Date(d).getTime())
+        if (dates.length > 0) {
+          const min = Math.min(...dates)
+          const max = Math.max(...dates)
+          setDateMin(min)
+          setDateMax(max)
+          setDateStart(min)
+          setDateEnd(max)
+        }
+      })
       .finally(() => setLoading(false))
   }, [])
 
+  // ─── Handlers ─────────────────────────────────────────────────
+
+  /** Open one dropdown and close the others */
+  const toggleDropdown = (name: string) => {
+    setOpenDropdown(prev => (prev === name ? null : name))
+  }
+
+  /** Delete an athlete after user confirmation */
   const handleDelete = async (id: number) => {
-    const confirmed = window.confirm('Delete this athlete and all their records?')
-    if (!confirmed) return
+    if (!window.confirm('Delete this athlete and all their records?')) return
     await deleteAthlete(id)
     setAthletes(prev => prev.filter(a => a.id !== id))
   }
@@ -30,147 +105,136 @@ export default function AthletesPage() {
     return athletes.filter(a => a.id === athleteID && a.points != null)
   }
 
-  const toggleExpand = (id: number) => {
-    setExpandedID(prev => prev === id ? null : id)
-  }
+  // ─── Filtering & Sorting ──────────────────────────────────────
+  // chain: position → school → division → stats/date → sort
+  const toTime = (d: string) => new Date(d).getTime()
 
-  const filtered = athletes.filter(a =>
-    filter === 'All' ? true : a.position === filter
-  )
+  const filtered = athletes
+    .filter(a => selectedPositions.has(a.position))
+    .filter(a => selectedSchools.has(a.highSchool))
+    .filter(a => selectedDivisions.has(a.division))
+    .filter(a => {
+      // athletes with no game stats are controlled by the toggle
+      if (a.points == null || !a.gameDate) return showNoStats
+      // athletes with stats are filtered by the date range
+      const t = toTime(a.gameDate)
+      return t >= dateStart && t <= dateEnd
+    })
+    .sort((a, b) => {
+      let cmp = 0
+      switch (sortKey) {
+        case 'name':     cmp = a.name.localeCompare(b.name); break
+        case 'id':       cmp = a.id - b.id; break
+        case 'points':   cmp = (a.points ?? 0) - (b.points ?? 0); break
+        case 'rebounds':  cmp = (a.rebounds ?? 0) - (b.rebounds ?? 0); break
+        case 'assists':   cmp = (a.assists ?? 0) - (b.assists ?? 0); break
+        case 'steals':    cmp = (a.steals ?? 0) - (b.steals ?? 0); break
+        case 'blocks':    cmp = (a.blocks ?? 0) - (b.blocks ?? 0); break
+        default:          cmp = 0
+      }
+      return sortDir === 'asc' ? cmp : -cmp
+    })
 
-  const uniqueAthletes = Array.from(
-    new Map(filtered.map(a => [a.id, a])).values()
-  )
+  // ─── Render ───────────────────────────────────────────────────
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <p className="page">Loading...</p>
 
-  // this function returns the "html + css" code rather than seperate html/css files
   return (
-    <div>
-      <h1>Athletes</h1>
+    <div className="page">
+      {/* page title + add button (top-right) */}
+      <div className="page-header">
+        <h1>Athletes</h1>
+        <button className="btn btn-primary" onClick={() => navigate('/athletes/new')}>
+          + Add Athlete
+        </button>
+      </div>
 
-      {/* add athlete button */}
-      <button onClick={() => navigate('/athletes/new')}>
-        + Add Athlete
-      </button>
+      {/* ── Filter Bar ─────────────────────────────────────────── */}
+      <div className="filter-bar">
+        <CheckboxDropdown
+          label="Position"
+          allItems={ALL_POSITIONS}
+          selectedItems={selectedPositions}
+          onSelectionChange={setSelectedPositions}
+          isOpen={openDropdown === 'position'}
+          onToggle={() => toggleDropdown('position')}
+        />
+        <CheckboxDropdown
+          label="School"
+          allItems={allSchools}
+          selectedItems={selectedSchools}
+          onSelectionChange={setSelectedSchools}
+          isOpen={openDropdown === 'school'}
+          onToggle={() => toggleDropdown('school')}
+          minWidth="280px"
+        />
+        <CheckboxDropdown
+          label="Division"
+          allItems={allDivisions}
+          selectedItems={selectedDivisions}
+          onSelectionChange={setSelectedDivisions}
+          isOpen={openDropdown === 'division'}
+          onToggle={() => toggleDropdown('division')}
+        />
 
-      {/* position filter */}
-      <div>
-        {['All', 'Guard', 'Forward', 'Centre'].map(pos => (
+        {/* toggle to show/hide athletes without game stats */}
+        <button
+          className="filter-btn"
+          onClick={() => { setShowNoStats(prev => !prev); setOpenDropdown(null) }}
+        >
+          {showNoStats ? 'Hide No Stats' : 'Show No Stats'}
+        </button>
+
+        {/* dual-thumb slider to narrow the game-date window */}
+        <DateRangeSlider
+          dateMin={dateMin}
+          dateMax={dateMax}
+          dateStart={dateStart}
+          dateEnd={dateEnd}
+          onStartChange={setDateStart}
+          onEndChange={setDateEnd}
+        />
+      </div>
+
+      {/* ── Sort Bar ───────────────────────────────────────────── */}
+      <div className="sort-bar">
+        <span className="filter-label">Sort by</span>
+        {SORT_OPTIONS.map(opt => (
           <button
-            key={pos}
-            onClick={() => setFilter(pos)}
-            style={{ fontWeight: filter === pos ? 'bold' : 'normal' }}
+            key={opt.key}
+            className={`sort-btn ${sortKey === opt.key ? 'active' : ''}`}
+            onClick={() => setSortKey(opt.key)}
           >
-            {pos}
+            {opt.label}
           </button>
+        ))}
+        <button
+          className="sort-btn"
+          onClick={() => setSortDir(prev => (prev === 'asc' ? 'desc' : 'asc'))}
+        >
+          {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
+        </button>
+      </div>
+
+      {/* ── Athlete Card Grid ──────────────────────────────────── */}
+      {/* grid flows left→right, top→bottom, matching the sort order */}
+      <div className="card-grid">
+        {filtered.map(a => (
+          <PlayerCardBrief
+            key={a.id}
+            athlete={a}
+            onClick={() => setPlayerCard(a)}
+            onEdit={() => navigate(`/athletes/${a.id}/edit`)}
+            onDelete={() => handleDelete(a.id)}
+          />
         ))}
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>High School</th>
-            <th>Division</th>
-            <th>Position</th>
-            <th>Stats</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {uniqueAthletes.map(a => (
-            <>
-              <tr key={a.id}>
-                <td>{a.id}</td>
-                {/* clicking name opens modal */}
-                <td>
-                  <button onClick={() => setModalAthlete(a)}>
-                    {a.name}
-                  </button>
-                </td>
-                <td>{a.email}</td>
-                <td>{a.highSchool}</td>
-                <td>{a.division ?? '—'}</td>
-                <td>{a.position ?? '—'}</td>
-                <td>
-                  {/* toggle inline stats */}
-                  <button onClick={() => toggleExpand(a.id)}>
-                    {expandedID === a.id ? 'Hide' : 'Show'}
-                  </button>
-                </td>
-                <td>
-                  <button onClick={() => navigate(`/athletes/${a.id}/edit`)}>Edit</button>
-                  <button onClick={() => handleDelete(a.id)}>Delete</button>
-                </td>
-              </tr>
+      {filtered.length === 0 && <p className="empty-state">No athletes found.</p>}
 
-              {/* inline stats row */}
-              {expandedID === a.id && (
-                <tr key={`${a.id}-stats`}>
-                  <td colSpan={8}>
-                    {getGamesForAthlete(a.id).length > 0 ? (
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>Game Date</th>
-                            <th>PTS</th>
-                            <th>REB</th>
-                            <th>AST</th>
-                            <th>STL</th>
-                            <th>BLK</th>
-                            <th>FOULS</th>
-                            <th>FGM/FGA</th>
-                            <th>3PM</th>
-                            <th>FTM/FTA</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {getGamesForAthlete(a.id).map(game => (
-                            <tr key={`${game.id}-${game.gameID}`}>
-                              <td>{game.gameDate ?? '—'}</td>
-                              <td>{game.points}</td>
-                              <td>{game.rebounds}</td>
-                              <td>{game.assists}</td>
-                              <td>{game.steals}</td>
-                              <td>{game.blocks}</td>
-                              <td>{game.fouls}</td>
-                              <td>{game.shotsMade}/{game.shotsAttempted}</td>
-                              <td>{game.threePointersMade}</td>
-                              <td>{game.freeThrowsMade}/{game.freeThrowsAttempted}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <p>No game stats available.</p>
-                    )}
-                  </td>
-                </tr>
-              )}
-            </>
-          ))}
-        </tbody>
-      </table>
-
-      {uniqueAthletes.length === 0 && <p>No athletes found.</p>}
-
-      {/* extract as component */}
-      {/* modal */}
-      {modalAthlete && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0,
-          width: '100vw', height: '100vh',
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <div>
-            <PlayerCard games={getGamesForAthlete(modalAthlete.id)} />
-            <button onClick={() => setModalAthlete(null)}>Close</button>
-          </div>
-        </div>
+      {/* ── Detail Modal ───────────────────────────────────────── */}
+      {playerCard && (
+        <PlayerCard games={getGamesForAthlete(playerCard.id)} onClose={() => setPlayerCard(null)} />
       )}
     </div>
   )
