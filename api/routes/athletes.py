@@ -14,33 +14,59 @@ def get_db_conn():
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
-# GET all athletes (with their high school (FOR NOW) ) - JOIN query
-# executes SQL JOIN on athlete using relevant athlete info
-# returns json response containing all athletes from table 
+# GET all athletes with one row per athlete
+# executes JOINs for profile fields and aggregates game stats (AVG/MAX) SQL AGGREGATION QUERY
+# returns summary data for the athletes list view
 @athletes_bp.route('/athletes', methods=['GET'])
 def get_athletes():
     db = get_db_conn()
     try:
         cur = db.cursor()
 
-        # initial sql query 
-        # cur.execute("""
-        #    SELECT a.id, a.name, a.email, a.highSchool, h.division,
-        #         CASE
-        #             WHEN g.athleteID IS NOT NULL THEN 'Guard'
-        #             WHEN f.athleteID IS NOT NULL THEN 'Forward'
-        #             WHEN c.athleteID IS NOT NULL THEN 'Centre'
-        #             ELSE NULL
-        #         END AS position
-        #     FROM Athlete a
-        #     LEFT JOIN HighSchool h ON a.highSchool = h.name
-        #     LEFT JOIN Guard g ON a.id = g.athleteID
-        #     LEFT JOIN Forward f ON a.id = f.athleteID
-        #     LEFT JOIN Centre c ON a.id = c.athleteID
-        # """)
-        
-        # sql query with game stats as well
+        cur.execute("""
+            SELECT a.id, a.name, a.email, a.highSchool, h.division,
+                CASE
+                    WHEN g.athleteID IS NOT NULL THEN 'Guard'
+                    WHEN f.athleteID IS NOT NULL THEN 'Forward'
+                    WHEN c.athleteID IS NOT NULL THEN 'Centre'
+                    ELSE NULL
+                END AS position,
+                ROUND(AVG(gs.points), 1) AS points,
+                ROUND(AVG(gs.rebounds), 1) AS rebounds,
+                ROUND(AVG(gs.assists), 1) AS assists,
+                ROUND(AVG(gs.steals), 1) AS steals,
+                ROUND(AVG(gs.blocks), 1) AS blocks,
+                ROUND(AVG(gs.fouls), 1) AS fouls,
+                ROUND(AVG(gs.shotsMade), 1) AS shotsMade,
+                ROUND(AVG(gs.shotsAttempted), 1) AS shotsAttempted,
+                ROUND(AVG(gs.threePointersMade), 1) AS threePointersMade,
+                ROUND(AVG(gs.freeThrowsMade), 1) AS freeThrowsMade,
+                ROUND(AVG(gs.freeThrowsAttempted), 1) AS freeThrowsAttempted,
+                MAX(gs.gameID) AS gameID,
+                MAX(gm.gameDate) AS gameDate
+            FROM Athlete a
+            LEFT JOIN HighSchool h ON a.highSchool = h.name
+            LEFT JOIN Guard g ON a.id = g.athleteID
+            LEFT JOIN Forward f ON a.id = f.athleteID
+            LEFT JOIN Centre c ON a.id = c.athleteID
+            LEFT JOIN GameStats gs ON a.id = gs.athleteID
+            LEFT JOIN Game gm ON gs.gameID = gm.gameID
+            GROUP BY a.id, a.name, a.email, a.highSchool, h.division, position
+            ORDER BY a.name ASC
+        """)
+        rows = cur.fetchall()
+        return jsonify([dict(row) for row in rows])
+    finally:
+        db.close()
 
+# GET all game rows for one athlete (most recent first)
+# executes JOINs to return detailed per-game stats for the modal view
+# returns one JSON row per game for the requested athlete id
+@athletes_bp.route('/athletes/<int:athlete_id>/games', methods=['GET'])
+def get_athlete_games(athlete_id):
+    db = get_db_conn()
+    try:
+        cur = db.cursor()
         cur.execute("""
             SELECT a.id, a.name, a.email, a.highSchool, h.division,
                 CASE
@@ -60,7 +86,9 @@ def get_athletes():
             LEFT JOIN Centre c ON a.id = c.athleteID
             LEFT JOIN GameStats gs ON a.id = gs.athleteID
             LEFT JOIN Game gm ON gs.gameID = gm.gameID
-                    """)
+            WHERE a.id = ?
+            ORDER BY gm.gameDate DESC
+        """, (athlete_id,))
         rows = cur.fetchall()
         return jsonify([dict(row) for row in rows])
     finally:
@@ -174,6 +202,9 @@ def get_schools():
 # get Athlete average
 # executes SQL DIVISION on athlete using athlete_id
 # returns json response
+
+
+
 
 # @athletes_bp.route('/athletes', methods=['GET'])
 # def get_athlete_average_stats():
