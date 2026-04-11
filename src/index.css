@@ -1,0 +1,285 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: #111;
+  background: #f7f7f7;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+h1,
+h2 {
+  margin: 0;
+}
+
+.games-page,
+.game-editor-page {
+  padding: 16px;
+}
+
+.page-heading-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.page-heading-row h1 {
+  margin-bottom: 4px;
+}
+
+.muted-text {
+  margin: 0;
+  color: #666;
+}
+
+.page-nav,
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.form-actions {
+  justify-content: space-between;
+}
+
+.form-actions-right {
+  display: flex;
+  gap: 8px;
+}
+
+.primary-button,
+.secondary-button,
+.icon-button,
+.danger-icon-button,
+.danger-button {
+  min-height: 30px;
+  padding: 4px 12px;
+}
+
+.primary-button {
+  border-color: #141424;
+  color: #fff;
+  background: #141424;
+}
+
+.secondary-button {
+  background: #fff;
+}
+
+.danger-icon-button {
+  color: #b00000;
+  border-color: #e3b6b6;
+  background: #fff;
+}
+
+.danger-button {
+  color: #fff;
+  border-color: #9f0000;
+  background: #b00000;
+}
+
+.error-banner {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid #e3b6b6;
+  border-radius: 4px;
+  color: #8a0000;
+  background: #fff1f1;
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.game-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin: 14px 0 16px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.game-filters label {
+  display: grid;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.game-filters select,
+.game-filters input {
+  min-width: 180px;
+  min-height: 30px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.game-card {
+  overflow: hidden;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.game-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 72px;
+  gap: 12px;
+  padding: 14px 16px;
+  color: #fff;
+  background: #141424;
+}
+
+.game-card-header h2 {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.game-card-header p {
+  margin: 4px 0 0;
+  color: #d8d8e8;
+}
+
+.game-card-body {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 16px;
+}
+
+.game-card-film {
+  padding: 0 16px 16px;
+}
+
+.game-card-film a {
+  display: inline-block;
+  color: #141424;
+  font-weight: 700;
+}
+
+.game-card-body span {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 4px;
+  background: #f3f3f3;
+  text-align: center;
+}
+
+.game-card-body strong {
+  font-size: 12px;
+  color: #777;
+  text-transform: uppercase;
+}
+
+.game-section {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.game-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.game-section-header label,
+.game-details-grid label {
+  display: grid;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.game-section-header select {
+  min-width: 260px;
+}
+
+.game-details-grid {
+  display: grid;
+  grid-template-columns: 180px 220px;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.game-details-grid input,
+.game-section-header select,
+.stats-entry-table input,
+.stats-entry-table select {
+  min-height: 30px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.stats-entry-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+
+.stats-entry-table th {
+  padding: 8px 6px;
+  color: #fff;
+  background: #141424;
+  text-align: left;
+}
+
+.stats-entry-table td {
+  padding: 6px;
+  border-bottom: 1px solid #eee;
+}
+
+.stats-entry-table select {
+  width: 220px;
+}
+
+.stats-entry-table input {
+  width: 64px;
+  padding: 2px 4px;
+}
+
+.required-row {
+  color: #777;
+  font-size: 13px;
+}
+
+@media (max-width: 1100px) {
+  .games-grid {
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+  }
+}
