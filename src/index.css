@@ -1,0 +1,26 @@
+/* dual range slider thumbs */
+.range-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  margin-top: 8px;
+}
+.range-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.range-thumb::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+}

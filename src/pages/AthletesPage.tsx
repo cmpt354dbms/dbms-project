@@ -19,6 +19,11 @@ export default function AthletesPage() {
   const [allDivisions, setAllDivisions] = useState<string[]>([])
   const [selectedDivisions, setSelectedDivisions] = useState<Set<string>>(new Set())
   const [divisionDropdownOpen, setDivisionDropdownOpen] = useState(false)
+  const [showNoStats, setShowNoStats] = useState(true)
+  const [dateMin, setDateMin] = useState(0)
+  const [dateMax, setDateMax] = useState(0)
+  const [dateStart, setDateStart] = useState(0)
+  const [dateEnd, setDateEnd] = useState(0)
   const [sortKey, setSortKey] = useState<string>('name')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
   const [modalAthlete, setModalAthlete] = useState<AthleteWithStats | null>(null)
@@ -33,6 +38,15 @@ export default function AthletesPage() {
         const divs = [...new Set(athleteData.map(a => a.division).filter(Boolean))].sort()
         setAllDivisions(divs)
         setSelectedDivisions(new Set(divs))
+        const dates = athleteData.map(a => a.gameDate).filter(Boolean).map(d => new Date(d).getTime())
+        if (dates.length > 0) {
+          const min = Math.min(...dates)
+          const max = Math.max(...dates)
+          setDateMin(min)
+          setDateMax(max)
+          setDateStart(min)
+          setDateEnd(max)
+        }
       })
       .finally(() => setLoading(false))
   }, [])
@@ -44,10 +58,18 @@ export default function AthletesPage() {
     setAthletes(prev => prev.filter(a => a.id !== id))
   }
 
+  const toTime = (d: string) => new Date(d).getTime()
+
   const filtered = athletes
     .filter(a => selectedPositions.has(a.position))
     .filter(a => selectedSchools.has(a.highSchool))
     .filter(a => selectedDivisions.has(a.division))
+    .filter(a => {
+      if (a.points == null) return showNoStats
+      if (!a.gameDate) return showNoStats
+      const t = toTime(a.gameDate)
+      return t >= dateStart && t <= dateEnd
+    })
     .sort((a, b) => {
       let cmp = 0
       switch (sortKey) {
@@ -220,6 +242,63 @@ export default function AthletesPage() {
             </div>
           )}
         </div>
+
+        {/* show/hide no stats */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowNoStats(prev => !prev)}
+            style={{ fontWeight: 'normal' }}
+          >
+            {showNoStats ? 'Hide No Stats' : 'Show No Stats'}
+          </button>
+        </div>
+
+        {/* date range slider */}
+        {dateMin !== dateMax && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '300px' }}>
+            <strong>Date: </strong>
+            <span style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+              {new Date(dateStart).toLocaleDateString()}
+            </span>
+            <div style={{ position: 'relative', flex: 1, height: '20px' }}>
+              <input
+                type="range"
+                min={dateMin}
+                max={dateMax}
+                value={dateStart}
+                onChange={e => {
+                  const v = Number(e.target.value)
+                  setDateStart(Math.min(v, dateEnd))
+                }}
+                style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%',
+                  pointerEvents: 'none', appearance: 'none', background: 'transparent',
+                  zIndex: 2,
+                }}
+                className="range-thumb"
+              />
+              <input
+                type="range"
+                min={dateMin}
+                max={dateMax}
+                value={dateEnd}
+                onChange={e => {
+                  const v = Number(e.target.value)
+                  setDateEnd(Math.max(v, dateStart))
+                }}
+                style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%',
+                  pointerEvents: 'none', appearance: 'none', background: 'transparent',
+                  zIndex: 1,
+                }}
+                className="range-thumb"
+              />
+            </div>
+            <span style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+              {new Date(dateEnd).toLocaleDateString()}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* sort controls */}
