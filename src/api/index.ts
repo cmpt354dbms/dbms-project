@@ -14,6 +14,11 @@ export const deleteAthlete = async (id: number): Promise<{ message: string }> =>
   return res.json()
 }
 
+export const getSchools = async (): Promise<{ name: string }[]> => {
+  const res = await fetch(`${BASE_URL}/schools`)
+  return res.json()
+}
+
 /*
   insert all other API calls underneath
 */

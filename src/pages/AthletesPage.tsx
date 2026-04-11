@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAthletes, deleteAthlete } from '../api'
+import { getAthletes, getSchools, deleteAthlete } from '../api'
  // import type { Athlete } from '../types'
 import type { AthleteWithStats } from '../types'
 
@@ -9,13 +9,24 @@ export default function AthletesPage() {
   const navigate = useNavigate()
   const [athletes, setAthletes] = useState<AthleteWithStats[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<string>('All')
+  const [allSchools, setAllSchools] = useState<string[]>([])
+  const [selectedSchools, setSelectedSchools] = useState<Set<string>>(new Set())
+  const [schoolDropdownOpen, setSchoolDropdownOpen] = useState(false)
+  const [positionFilter, setPositionFilter] = useState<string>('All')
+  const [divisionFilter, setDivisionFilter] = useState<string>('All')
+  const [sortKey, setSortKey] = useState<string>('name')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
   const [expandedID, setExpandedID] = useState<number | null>(null)
   const [modalAthlete, setModalAthlete] = useState<AthleteWithStats | null>(null)
 
   useEffect(() => {
-    getAthletes()
-      .then(setAthletes)
+    Promise.all([getAthletes(), getSchools()])
+      .then(([athleteData, schoolData]) => {
+        setAthletes(athleteData)
+        const names = schoolData.map(s => s.name).sort()
+        setAllSchools(names)
+        setSelectedSchools(new Set(names))
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -30,9 +41,26 @@ export default function AthletesPage() {
     setExpandedID(prev => prev === id ? null : id)
   }
 
-  const filtered = athletes.filter(a =>
-    filter === 'All' ? true : a.position === filter
-  )
+  const uniqueDivisions = [...new Set(athletes.map(a => a.division))].sort()
+
+  const filtered = athletes
+    .filter(a => positionFilter === 'All' || a.position === positionFilter)
+    .filter(a => selectedSchools.has(a.highSchool))
+    .filter(a => divisionFilter === 'All' || a.division === divisionFilter)
+    .sort((a, b) => {
+      let cmp = 0
+      switch (sortKey) {
+        case 'name':    cmp = a.name.localeCompare(b.name); break
+        case 'id':      cmp = a.id - b.id; break
+        case 'points':  cmp = (a.points ?? 0) - (b.points ?? 0); break
+        case 'rebounds': cmp = (a.rebounds ?? 0) - (b.rebounds ?? 0); break
+        case 'assists':  cmp = (a.assists ?? 0) - (b.assists ?? 0); break
+        case 'steals':   cmp = (a.steals ?? 0) - (b.steals ?? 0); break
+        case 'blocks':   cmp = (a.blocks ?? 0) - (b.blocks ?? 0); break
+        default:         cmp = 0
+      }
+      return sortDir === 'asc' ? cmp : -cmp
+    })
 
   if (loading) return <p>Loading...</p>
 
@@ -46,17 +74,117 @@ export default function AthletesPage() {
         + Add Athlete
       </button>
 
-      {/* position filter */}
-      <div>
-        {['All', 'Guard', 'Forward', 'Centre'].map(pos => (
+      {/* filters */}
+      <div style={{ marginBottom: '1rem' }}>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <strong>Position: </strong>
+          {['All', 'Guard', 'Forward', 'Centre'].map(pos => (
+            <button
+              key={pos}
+              onClick={() => setPositionFilter(pos)}
+              style={{ fontWeight: positionFilter === pos ? 'bold' : 'normal', marginRight: '0.25rem' }}
+            >
+              {pos}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ marginBottom: '0.5rem', position: 'relative' }}>
+          <strong>School: </strong>
+          <button onClick={() => setSchoolDropdownOpen(prev => !prev)}>
+            {selectedSchools.size === allSchools.length
+              ? 'All Schools'
+              : selectedSchools.size === 0
+                ? 'None Selected'
+                : `${selectedSchools.size} Selected`}
+            {schoolDropdownOpen ? ' ▲' : ' ▼'}
+          </button>
+          {schoolDropdownOpen && (
+            <div style={{
+              position: 'absolute', top: '100%', left: '70px', zIndex: 10,
+              background: 'white', border: '1px solid #ccc', borderRadius: '4px',
+              padding: '0.5rem', minWidth: '250px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+            }}>
+              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedSchools.size === allSchools.length}
+                  onChange={() => {
+                    if (selectedSchools.size === allSchools.length) {
+                      setSelectedSchools(new Set())
+                    } else {
+                      setSelectedSchools(new Set(allSchools))
+                    }
+                  }}
+                />{' '}Select All
+              </label>
+              <hr style={{ margin: '0.25rem 0' }} />
+              {allSchools.map(s => (
+                <label key={s} style={{ display: 'block', marginBottom: '0.25rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedSchools.has(s)}
+                    onChange={() => {
+                      setSelectedSchools(prev => {
+                        const next = new Set(prev)
+                        if (next.has(s)) next.delete(s)
+                        else next.add(s)
+                        return next
+                      })
+                    }}
+                  />{' '}{s}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div style={{ marginBottom: '0.5rem' }}>
+          <strong>Division: </strong>
           <button
-            key={pos}
-            onClick={() => setFilter(pos)}
-            style={{ fontWeight: filter === pos ? 'bold' : 'normal' }}
+            onClick={() => setDivisionFilter('All')}
+            style={{ fontWeight: divisionFilter === 'All' ? 'bold' : 'normal', marginRight: '0.25rem' }}
           >
-            {pos}
+            All
+          </button>
+          {uniqueDivisions.map(d => (
+            <button
+              key={d}
+              onClick={() => setDivisionFilter(d)}
+              style={{ fontWeight: divisionFilter === d ? 'bold' : 'normal', marginRight: '0.25rem' }}
+            >
+              {d}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* sort controls */}
+      <div style={{ marginBottom: '1rem' }}>
+        <strong>Sort by: </strong>
+        {[
+          { key: 'name', label: 'Name' },
+          { key: 'id', label: 'ID' },
+          { key: 'points', label: 'Points' },
+          { key: 'rebounds', label: 'Rebounds' },
+          { key: 'assists', label: 'Assists' },
+          { key: 'steals', label: 'Steals' },
+          { key: 'blocks', label: 'Blocks' },
+        ].map(opt => (
+          <button
+            key={opt.key}
+            onClick={() => setSortKey(opt.key)}
+            style={{ fontWeight: sortKey === opt.key ? 'bold' : 'normal', marginRight: '0.25rem' }}
+          >
+            {opt.label}
           </button>
         ))}
+        <button
+          onClick={() => setSortDir(prev => prev === 'asc' ? 'desc' : 'asc')}
+          style={{ marginLeft: '0.5rem' }}
+        >
+          {sortDir === 'asc' ? '↑ Ascending' : '↓ Descending'}
+        </button>
       </div>
 
       <table>
