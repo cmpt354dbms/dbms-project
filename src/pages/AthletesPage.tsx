@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getAthletes, deleteAthlete } from '../api'
  // import type { Athlete } from '../types'
 import type { AthleteWithStats } from '../types'
-import PlayerCard from './PlayerCard'
+import PlayerCard from '../components/PlayerCard'
 
 export default function AthletesPage() {
   const navigate = useNavigate()
