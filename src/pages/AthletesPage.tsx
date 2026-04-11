@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAthletes, getSchools, deleteAthlete } from '../api'
- // import type { Athlete } from '../types'
 import type { AthleteWithStats } from '../types'
+import AthleteModal from '../components/AthleteModal'
 
 
 export default function AthletesPage() {
@@ -342,42 +342,8 @@ export default function AthletesPage() {
 
       {filtered.length === 0 && <p>No athletes found.</p>}
 
-      {/* extract as component */}
-      {/* modal */}
       {modalAthlete && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0,
-          width: '100vw', height: '100vh',
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', minWidth: '400px' }}>
-            <h2>{modalAthlete.name}</h2>
-            <p><strong>Email:</strong> {modalAthlete.email}</p>
-            <p><strong>High School:</strong> {modalAthlete.highSchool}</p>
-            <p><strong>Division:</strong> {modalAthlete.division ?? '—'}</p>
-            <p><strong>Position:</strong> {modalAthlete.position ?? '—'}</p>
-            <hr />
-            <h3>Game Stats</h3>
-            {modalAthlete.points != null ? (
-              <>
-                <p><strong>Date:</strong> {modalAthlete.gameDate ?? '—'}</p>
-                <p><strong>Points:</strong> {modalAthlete.points}</p>
-                <p><strong>Rebounds:</strong> {modalAthlete.rebounds}</p>
-                <p><strong>Assists:</strong> {modalAthlete.assists}</p>
-                <p><strong>Steals:</strong> {modalAthlete.steals}</p>
-                <p><strong>Blocks:</strong> {modalAthlete.blocks}</p>
-                <p><strong>Fouls:</strong> {modalAthlete.fouls}</p>
-                <p><strong>FG:</strong> {modalAthlete.shotsMade}/{modalAthlete.shotsAttempted}</p>
-                <p><strong>3PM:</strong> {modalAthlete.threePointersMade}</p>
-                <p><strong>FT:</strong> {modalAthlete.freeThrowsMade}/{modalAthlete.freeThrowsAttempted}</p>
-              </>
-            ) : (
-              <p>No game stats available.</p>
-            )}
-            <button onClick={() => setModalAthlete(null)}>Close</button>
-          </div>
-        </div>
+        <AthleteModal athlete={modalAthlete} onClose={() => setModalAthlete(null)} />
       )}
     </div>
   )
