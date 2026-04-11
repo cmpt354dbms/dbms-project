@@ -71,9 +71,6 @@ You need two terminals running at the same time — one for Flask, one for React
 | `/athletes` | View, filter, add, edit, delete athletes |
 | `/athletes/new` | Add a new athlete |
 | `/athletes/:id/edit` | Edit an existing athlete |
-| `/stats` | Game stats with date filter |
-| `/schools` | School leaderboard |
-| `/recruiting` | Recruiting offers and management |
 
 ## Project Structure
 ```
