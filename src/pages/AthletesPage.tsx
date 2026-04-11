@@ -101,6 +101,10 @@ export default function AthletesPage() {
     setAthletes(prev => prev.filter(a => a.id !== id))
   }
 
+  const getGamesForAthlete = (athleteID: number) => {
+    return athletes.filter(a => a.id === athleteID && a.points != null)
+  }
+
   // ─── Filtering & Sorting ──────────────────────────────────────
   // chain: position → school → division → stats/date → sort
   const toTime = (d: string) => new Date(d).getTime()
@@ -230,7 +234,7 @@ export default function AthletesPage() {
 
       {/* ── Detail Modal ───────────────────────────────────────── */}
       {playerCard && (
-        <PlayerCard athlete={playerCard} onClose={() => setPlayerCard(null)} />
+        <PlayerCard games={getGamesForAthlete(playerCard.id)} onClose={() => setPlayerCard(null)} />
       )}
     </div>
   )
