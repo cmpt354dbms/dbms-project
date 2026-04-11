@@ -130,3 +130,12 @@ export interface SchoolStat {
   avg_rebounds: number
   avg_assists: number
 }
+
+// used for INSERT and UPDATE forms
+export interface AthleteFormData {
+  id?: number          // optional for update since it's in the URL
+  name: string
+  email: string
+  highSchool: string
+  position: 'Guard' | 'Forward' | 'Centre'
+}
