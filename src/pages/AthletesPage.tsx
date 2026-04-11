@@ -51,6 +51,12 @@ export default function AthletesPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  const closeAllDropdowns = () => {
+    setPositionDropdownOpen(false)
+    setSchoolDropdownOpen(false)
+    setDivisionDropdownOpen(false)
+  }
+
   const handleDelete = async (id: number) => {
     const confirmed = window.confirm('Delete this athlete and all their records?')
     if (!confirmed) return
@@ -85,38 +91,34 @@ export default function AthletesPage() {
       return sortDir === 'asc' ? cmp : -cmp
     })
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <p className="page" style={{ padding: '2rem' }}>Loading...</p>
 
-  // this function returns the "html + css" code rather than seperate html/css files
   return (
-    <div>
-      <h1>Athletes</h1>
+    <div className="page">
+      {/* header row */}
+      <div className="page-header">
+        <h1>Athletes</h1>
+        <button className="btn btn-primary" onClick={() => navigate('/athletes/new')}>
+          + Add Athlete
+        </button>
+      </div>
 
-      {/* add athlete button */}
-      <button onClick={() => navigate('/athletes/new')}>
-        + Add Athlete
-      </button>
-
-      {/* filters */}
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+      {/* filter bar */}
+      <div className="filter-bar">
         {/* position dropdown */}
-        <div style={{ position: 'relative' }}>
-          <strong>Position: </strong>
-          <button onClick={() => { setPositionDropdownOpen(prev => !prev); setSchoolDropdownOpen(false); setDivisionDropdownOpen(false) }}>
+        <div className="filter-group">
+          <button className="filter-btn" onClick={() => { setPositionDropdownOpen(prev => !prev); setSchoolDropdownOpen(false); setDivisionDropdownOpen(false) }}>
+            <span className="filter-label">Position</span>
             {selectedPositions.size === allPositions.length
-              ? 'All Positions'
+              ? 'All'
               : selectedPositions.size === 0
-                ? 'None Selected'
-                : `${selectedPositions.size} Selected`}
+                ? 'None'
+                : `${selectedPositions.size}`}
             {positionDropdownOpen ? ' ▲' : ' ▼'}
           </button>
           {positionDropdownOpen && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, zIndex: 10,
-              background: 'white', border: '1px solid #ccc', borderRadius: '4px',
-              padding: '0.5rem', minWidth: '180px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-            }}>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', cursor: 'pointer' }}>
+            <div className="filter-dropdown">
+              <label className="select-all">
                 <input
                   type="checkbox"
                   checked={selectedPositions.size === allPositions.length}
@@ -124,11 +126,11 @@ export default function AthletesPage() {
                     if (selectedPositions.size === allPositions.length) setSelectedPositions(new Set())
                     else setSelectedPositions(new Set(allPositions))
                   }}
-                />{' '}Select All
+                /> Select All
               </label>
-              <hr style={{ margin: '0.25rem 0' }} />
+              <hr />
               {allPositions.map(p => (
-                <label key={p} style={{ display: 'block', marginBottom: '0.25rem', cursor: 'pointer' }}>
+                <label key={p}>
                   <input
                     type="checkbox"
                     checked={selectedPositions.has(p)}
@@ -140,7 +142,7 @@ export default function AthletesPage() {
                         return next
                       })
                     }}
-                  />{' '}{p}
+                  /> {p}
                 </label>
               ))}
             </div>
@@ -148,23 +150,19 @@ export default function AthletesPage() {
         </div>
 
         {/* school dropdown */}
-        <div style={{ position: 'relative' }}>
-          <strong>School: </strong>
-          <button onClick={() => { setSchoolDropdownOpen(prev => !prev); setPositionDropdownOpen(false); setDivisionDropdownOpen(false) }}>
+        <div className="filter-group">
+          <button className="filter-btn" onClick={() => { setSchoolDropdownOpen(prev => !prev); setPositionDropdownOpen(false); setDivisionDropdownOpen(false) }}>
+            <span className="filter-label">School</span>
             {selectedSchools.size === allSchools.length
-              ? 'All Schools'
+              ? 'All'
               : selectedSchools.size === 0
-                ? 'None Selected'
-                : `${selectedSchools.size} Selected`}
+                ? 'None'
+                : `${selectedSchools.size}`}
             {schoolDropdownOpen ? ' ▲' : ' ▼'}
           </button>
           {schoolDropdownOpen && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, zIndex: 10,
-              background: 'white', border: '1px solid #ccc', borderRadius: '4px',
-              padding: '0.5rem', minWidth: '250px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-            }}>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', cursor: 'pointer' }}>
+            <div className="filter-dropdown" style={{ minWidth: '280px' }}>
+              <label className="select-all">
                 <input
                   type="checkbox"
                   checked={selectedSchools.size === allSchools.length}
@@ -172,11 +170,11 @@ export default function AthletesPage() {
                     if (selectedSchools.size === allSchools.length) setSelectedSchools(new Set())
                     else setSelectedSchools(new Set(allSchools))
                   }}
-                />{' '}Select All
+                /> Select All
               </label>
-              <hr style={{ margin: '0.25rem 0' }} />
+              <hr />
               {allSchools.map(s => (
-                <label key={s} style={{ display: 'block', marginBottom: '0.25rem', cursor: 'pointer' }}>
+                <label key={s}>
                   <input
                     type="checkbox"
                     checked={selectedSchools.has(s)}
@@ -188,7 +186,7 @@ export default function AthletesPage() {
                         return next
                       })
                     }}
-                  />{' '}{s}
+                  /> {s}
                 </label>
               ))}
             </div>
@@ -196,23 +194,19 @@ export default function AthletesPage() {
         </div>
 
         {/* division dropdown */}
-        <div style={{ position: 'relative' }}>
-          <strong>Division: </strong>
-          <button onClick={() => { setDivisionDropdownOpen(prev => !prev); setPositionDropdownOpen(false); setSchoolDropdownOpen(false) }}>
+        <div className="filter-group">
+          <button className="filter-btn" onClick={() => { setDivisionDropdownOpen(prev => !prev); setPositionDropdownOpen(false); setSchoolDropdownOpen(false) }}>
+            <span className="filter-label">Division</span>
             {selectedDivisions.size === allDivisions.length
-              ? 'All Divisions'
+              ? 'All'
               : selectedDivisions.size === 0
-                ? 'None Selected'
-                : `${selectedDivisions.size} Selected`}
+                ? 'None'
+                : `${selectedDivisions.size}`}
             {divisionDropdownOpen ? ' ▲' : ' ▼'}
           </button>
           {divisionDropdownOpen && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, zIndex: 10,
-              background: 'white', border: '1px solid #ccc', borderRadius: '4px',
-              padding: '0.5rem', minWidth: '150px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-            }}>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 'bold', cursor: 'pointer' }}>
+            <div className="filter-dropdown">
+              <label className="select-all">
                 <input
                   type="checkbox"
                   checked={selectedDivisions.size === allDivisions.length}
@@ -220,11 +214,11 @@ export default function AthletesPage() {
                     if (selectedDivisions.size === allDivisions.length) setSelectedDivisions(new Set())
                     else setSelectedDivisions(new Set(allDivisions))
                   }}
-                />{' '}Select All
+                /> Select All
               </label>
-              <hr style={{ margin: '0.25rem 0' }} />
+              <hr />
               {allDivisions.map(d => (
-                <label key={d} style={{ display: 'block', marginBottom: '0.25rem', cursor: 'pointer' }}>
+                <label key={d}>
                   <input
                     type="checkbox"
                     checked={selectedDivisions.has(d)}
@@ -236,7 +230,7 @@ export default function AthletesPage() {
                         return next
                       })
                     }}
-                  />{' '}{d}
+                  /> {d}
                 </label>
               ))}
             </div>
@@ -244,66 +238,46 @@ export default function AthletesPage() {
         </div>
 
         {/* show/hide no stats */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <button
-            onClick={() => setShowNoStats(prev => !prev)}
-            style={{ fontWeight: 'normal' }}
-          >
-            {showNoStats ? 'Hide No Stats' : 'Show No Stats'}
-          </button>
-        </div>
+        <button
+          className="filter-btn"
+          onClick={() => { setShowNoStats(prev => !prev); closeAllDropdowns() }}
+        >
+          {showNoStats ? 'Hide No Stats' : 'Show No Stats'}
+        </button>
 
         {/* date range slider */}
         {dateMin !== dateMax && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '300px' }}>
-            <strong>Date: </strong>
-            <span style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
-              {new Date(dateStart).toLocaleDateString()}
-            </span>
-            <div style={{ position: 'relative', flex: 1, height: '20px' }}>
+          <div className="date-range">
+            <span className="filter-label">Date</span>
+            <span className="date-range-label">{new Date(dateStart).toLocaleDateString()}</span>
+            <div className="date-range-track">
               <input
                 type="range"
                 min={dateMin}
                 max={dateMax}
                 value={dateStart}
-                onChange={e => {
-                  const v = Number(e.target.value)
-                  setDateStart(Math.min(v, dateEnd))
-                }}
-                style={{
-                  position: 'absolute', top: 0, left: 0, width: '100%',
-                  pointerEvents: 'none', appearance: 'none', background: 'transparent',
-                  zIndex: 2,
-                }}
+                onChange={e => setDateStart(Math.min(Number(e.target.value), dateEnd))}
                 className="range-thumb"
+                style={{ zIndex: 2 }}
               />
               <input
                 type="range"
                 min={dateMin}
                 max={dateMax}
                 value={dateEnd}
-                onChange={e => {
-                  const v = Number(e.target.value)
-                  setDateEnd(Math.max(v, dateStart))
-                }}
-                style={{
-                  position: 'absolute', top: 0, left: 0, width: '100%',
-                  pointerEvents: 'none', appearance: 'none', background: 'transparent',
-                  zIndex: 1,
-                }}
+                onChange={e => setDateEnd(Math.max(Number(e.target.value), dateStart))}
                 className="range-thumb"
+                style={{ zIndex: 1 }}
               />
             </div>
-            <span style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
-              {new Date(dateEnd).toLocaleDateString()}
-            </span>
+            <span className="date-range-label">{new Date(dateEnd).toLocaleDateString()}</span>
           </div>
         )}
       </div>
 
-      {/* sort controls */}
-      <div style={{ marginBottom: '1rem' }}>
-        <strong>Sort by: </strong>
+      {/* sort bar */}
+      <div className="sort-bar">
+        <span className="filter-label">Sort by</span>
         {[
           { key: 'name', label: 'Name' },
           { key: 'id', label: 'ID' },
@@ -315,26 +289,19 @@ export default function AthletesPage() {
         ].map(opt => (
           <button
             key={opt.key}
+            className={`sort-btn ${sortKey === opt.key ? 'active' : ''}`}
             onClick={() => setSortKey(opt.key)}
-            style={{ fontWeight: sortKey === opt.key ? 'bold' : 'normal', marginRight: '0.25rem' }}
           >
             {opt.label}
           </button>
         ))}
-        <button
-          onClick={() => setSortDir(prev => prev === 'asc' ? 'desc' : 'asc')}
-          style={{ marginLeft: '0.5rem' }}
-        >
-          {sortDir === 'asc' ? '↑ Ascending' : '↓ Descending'}
+        <button className="sort-btn" onClick={() => setSortDir(prev => prev === 'asc' ? 'desc' : 'asc')}>
+          {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
         </button>
       </div>
 
-      {/* athlete card grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: '1rem',
-      }}>
+      {/* card grid */}
+      <div className="card-grid">
         {filtered.map(a => (
           <AthleteCard
             key={a.id}
@@ -346,7 +313,7 @@ export default function AthletesPage() {
         ))}
       </div>
 
-      {filtered.length === 0 && <p>No athletes found.</p>}
+      {filtered.length === 0 && <p className="empty-state">No athletes found.</p>}
 
       {modalAthlete && (
         <AthleteModal athlete={modalAthlete} onClose={() => setModalAthlete(null)} />
