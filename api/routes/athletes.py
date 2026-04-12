@@ -199,12 +199,35 @@ def get_schools():
     finally:
         db.close()
 
-# get Athlete average
+# get Athletes who have film uploaded 
 # executes SQL DIVISION on athlete using athlete_id
 # returns json response
+@athletes_bp.route('/athletes/full-film-coverage', methods=['GET'])
+def get_athletes_full_film_coverage():
+    db = get_db_conn()
+    try:
+        cur = db.cursor()
+        cur.execute("""
+            SELECT a.id, a.name, a.email, a.highSchool
+            FROM Athlete a
+            WHERE NOT EXISTS (
+                SELECT gameID FROM GameStats gs
+                WHERE gs.athleteID = a.id
+                AND NOT EXISTS (
+                    SELECT 1 FROM GameFilm gf
+                    WHERE gf.athleteID = a.id
+                    AND gf.gameID = gs.gameID
+                )
+            )
+            AND EXISTS (
+                SELECT 1 FROM GameStats gs2
+                WHERE gs2.athleteID = a.id
+            )
+            ORDER BY a.name ASC
+        """)
+        rows = cur.fetchall()
+        return jsonify([dict(row) for row in rows])
+    finally:
+        db.close()
 
 
-
-
-# @athletes_bp.route('/athletes', methods=['GET'])
-# def get_athlete_average_stats():
