@@ -15,7 +15,7 @@ def get_db_conn():
     return conn
 
 # GET all athletes with one row per athlete
-# executes JOINs for profile fields and aggregates game stats (AVG/MAX) SQL AGGREGATION QUERY
+# executes JOINs for profile fields and aggregates game stats (AVG/MAX) SQL AGGREGATION GROUP BY QUERY
 # returns summary data for the athletes list view
 @athletes_bp.route('/athletes', methods=['GET'])
 def get_athletes():
@@ -227,4 +227,26 @@ def get_athletes_full_film_coverage():
     finally:
         db.close()
 
-
+# GET tournament-wide summary stats
+# executes SQL AGGREGATION (no GROUP BY) across all game stats
+# returns a single row with tournament totals and averages
+@athletes_bp.route('/stats/tournament-summary', methods=['GET'])
+def get_tournament_summary():
+    db = get_db_conn()
+    try:
+        cur = db.cursor()
+        cur.execute("""
+            SELECT
+                COUNT(DISTINCT gs.athleteID) AS totalAthletes,
+                COUNT(DISTINCT gs.gameID)    AS totalGames,
+                MAX(gs.points)               AS highestPoints,
+                ROUND(AVG(gs.points), 1)     AS avgPoints,
+                ROUND(AVG(gs.rebounds), 1)   AS avgRebounds,
+                ROUND(AVG(gs.assists), 1)    AS avgAssists,
+                ROUND(AVG(gs.steals), 1)     AS avgSteals
+            FROM GameStats gs
+        """)
+        row = cur.fetchone()
+        return jsonify(dict(row))
+    finally:
+        db.close()
