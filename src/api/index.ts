@@ -151,3 +151,8 @@ export const deleteGame = async (id: number): Promise<{ message?: string; error?
   if (!res.ok) throw new Error(data.error ?? 'Failed to delete game.')
   return data
 }
+
+export async function getAthletesFullFilmCoverage(): Promise<AthleteWithStats[]> {
+  const res = await fetch('/api/athletes/full-film-coverage')
+  return res.json()
+}

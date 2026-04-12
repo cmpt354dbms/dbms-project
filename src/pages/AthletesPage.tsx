@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAthletes, deleteAthlete, getAthleteGames } from '../api'
+import { getAthletes, deleteAthlete, getAthleteGames, getAthletesFullFilmCoverage } from '../api'
 import type { AthleteWithStats } from '../types'
 import PlayerCardBrief from '../components/PlayerCardBrief'
 import PlayerCard from '../components/PlayerCard'
 import CheckboxDropdown from '../components/CheckboxDropdown'
 import DateRangeSlider from '../components/DateRangeSlider'
 
-/** Sort options available for the athlete grid */
 const SORT_OPTIONS = [
   { key: 'name',     label: 'Name' },
   { key: 'id',       label: 'ID' },
@@ -19,7 +18,6 @@ const SORT_OPTIONS = [
 ]
 
 const ALL_POSITIONS = ['Guard', 'Forward', 'Centre']
-
 
 export default function AthletesPage() {
   const navigate = useNavigate()
@@ -45,6 +43,10 @@ export default function AthletesPage() {
   const [dateStart, setDateStart] = useState(0)
   const [dateEnd, setDateEnd] = useState(0)
 
+  // ─── Filter: film coverage ────────────────────────────────────
+  const [filmOnly, setFilmOnly] = useState(false)
+  const [filmCoverageIDs, setFilmCoverageIDs] = useState<Set<number>>(new Set())
+
   // ─── Sorting ──────────────────────────────────────────────────
   const [sortKey, setSortKey] = useState<string>('name')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
@@ -55,24 +57,20 @@ export default function AthletesPage() {
   const [loadingPlayerGames, setLoadingPlayerGames] = useState(false)
 
   // ─── Data Fetching ────────────────────────────────────────────
-  // on mount, fetch athletes then derive schools, divisions, and date range
   useEffect(() => {
     getAthletes()
       .then(athleteData => {
         setAthletes(athleteData)
 
-        // derive unique schools from athlete data
         const names = [...new Set(athleteData.map(a => a.highSchool))].sort()
         setAllSchools(names)
         setSelectedSchools(new Set(names))
 
-        // derive unique divisions from athlete data
         const divs = [...new Set(athleteData.map(a => a.division).filter(Boolean))] as string[]
         divs.sort()
         setAllDivisions(divs)
         setSelectedDivisions(new Set(divs))
 
-        // date bounds for the range slider (epoch-ms timestamps)
         const dates = athleteData
           .map(a => a.gameDate)
           .filter((d): d is string => Boolean(d))
@@ -85,18 +83,21 @@ export default function AthletesPage() {
           setDateStart(min)
           setDateEnd(max)
         }
+
+        // fetch film coverage IDs for division query filter
+        getAthletesFullFilmCoverage().then(data => {
+          setFilmCoverageIDs(new Set(data.map(a => a.id)))
+        })
       })
       .finally(() => setLoading(false))
   }, [])
 
   // ─── Handlers ─────────────────────────────────────────────────
 
-  /** Open one dropdown and close the others */
   const toggleDropdown = (name: string) => {
     setOpenDropdown(prev => (prev === name ? null : name))
   }
 
-  /** Delete an athlete after user confirmation */
   const handleDelete = async (id: number) => {
     if (!window.confirm('Delete this athlete and all their records?')) return
     await deleteAthlete(id)
@@ -107,7 +108,6 @@ export default function AthletesPage() {
     setPlayerCard(athlete)
     setPlayerGames([])
     setLoadingPlayerGames(true)
-
     try {
       const games = await getAthleteGames(athlete.id)
       setPlayerGames(games.filter(g => g.points != null))
@@ -123,17 +123,15 @@ export default function AthletesPage() {
   }
 
   // ─── Filtering & Sorting ──────────────────────────────────────
-  // chain: position → school → division → stats/date → sort
   const toTime = (d: string) => new Date(d).getTime()
 
   const filtered = athletes
+    .filter(a => !filmOnly || filmCoverageIDs.has(a.id))
     .filter(a => selectedPositions.has(a.position))
     .filter(a => selectedSchools.has(a.highSchool))
     .filter(a => selectedDivisions.has(a.division))
     .filter(a => {
-      // athletes with no game stats are controlled by the toggle
       if (a.points == null || !a.gameDate) return showNoStats
-      // athletes with stats are filtered by the date range
       const t = toTime(a.gameDate)
       return t >= dateStart && t <= dateEnd
     })
@@ -158,7 +156,7 @@ export default function AthletesPage() {
 
   return (
     <div className="page">
-      {/* page title + add button (top-right) */}
+      {/* page title + add button */}
       <div className="page-header">
         <h1>Athletes</h1>
         <button className="btn btn-primary" onClick={() => navigate('/athletes/new')}>
@@ -194,7 +192,6 @@ export default function AthletesPage() {
           onToggle={() => toggleDropdown('division')}
         />
 
-        {/* toggle to show/hide athletes without game stats */}
         <button
           className="filter-btn"
           onClick={() => { setShowNoStats(prev => !prev); setOpenDropdown(null) }}
@@ -202,7 +199,13 @@ export default function AthletesPage() {
           {showNoStats ? 'Hide No Stats' : 'Show No Stats'}
         </button>
 
-        {/* dual-thumb slider to narrow the game-date window */}
+        <button
+          className="filter-btn"
+          onClick={() => { setFilmOnly(prev => !prev); setOpenDropdown(null) }}
+        >
+          {filmOnly ? 'All Athletes' : 'Has Game Film'}
+        </button>
+
         <DateRangeSlider
           dateMin={dateMin}
           dateMax={dateMax}
@@ -234,7 +237,6 @@ export default function AthletesPage() {
       </div>
 
       {/* ── Athlete Card Grid ──────────────────────────────────── */}
-      {/* grid flows left→right, top→bottom, matching the sort order */}
       <div className="card-grid">
         {filtered.map(a => (
           <PlayerCardBrief
