@@ -52,10 +52,6 @@ export const deleteAthlete = async (id: number): Promise<{ message: string }> =>
   return res.json()
 }
 
-/*
-  insert all other API calls underneath
-*/
-
 export const addAthlete = async (athlete: {
   jerseyNumber: number
   name: string
@@ -88,6 +84,11 @@ export const editAthlete = async (id: number, athlete: {
   const data = await res.json()
   if (!res.ok) throw new Error(data.error ?? 'Failed to update athlete.')
   return data
+}
+
+export async function getAthletesFullFilmCoverage(): Promise<AthleteWithStats[]> {
+  const res = await fetch('/api/athletes/full-film-coverage')
+  return res.json()
 }
 
 export const getCoaches = async (): Promise<Coach[]> => {
@@ -296,11 +297,6 @@ export const deleteGame = async (id: number): Promise<{ message?: string; error?
   const data = await res.json()
   if (!res.ok) throw new Error(data.error ?? 'Failed to delete game.')
   return data
-}
-
-export async function getAthletesFullFilmCoverage(): Promise<AthleteWithStats[]> {
-  const res = await fetch('/api/athletes/full-film-coverage')
-  return res.json()
 }
 
 export async function getTournamentSummary() {

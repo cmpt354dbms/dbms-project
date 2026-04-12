@@ -275,24 +275,18 @@ def edit_game(game_id):
     try:
         data = request.get_json()
         cur = db.cursor()
-        cur.execute(
-            "UPDATE Game SET gameDate = ? WHERE gameID = ?",
-            (data['gameDate'], game_id),
-        )
-        if cur.rowcount == 0:
-            return jsonify({'error': 'Game not found'}), 404
-
+        
+        # Delete old stats
         cur.execute("DELETE FROM GameStats WHERE gameID = ?", (game_id,))
-        athlete_ids = insert_stats(cur, game_id, data.get('teams', []))
-        replace_game_film(cur, game_id, athlete_ids, data.get('filmURL', '').strip())
+        
+        # Re-inserting edited stats fires the INSERT trigger
+        insert_stats(cur, game_id, data.get('teams', []))
+        
         db.commit()
-        return jsonify({'message': 'Game updated successfully'})
-    except (sql.Error, ValueError, KeyError) as e:
-        db.rollback()
+        return jsonify({'message': 'Updated successfully'})
+    except sql.Error as e:
+        db.rollback() # Important! Prevents stats from staying deleted if edit fails
         return jsonify({'error': str(e)}), 400
-    finally:
-        db.close()
-
 
 @games_bp.route('/games/<int:game_id>', methods=['DELETE'])
 def delete_game(game_id):
