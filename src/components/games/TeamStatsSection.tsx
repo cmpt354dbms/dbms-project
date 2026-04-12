@@ -125,7 +125,7 @@ export default function TeamStatsSection({
                     const selectedElsewhere = selectedAthleteIDs.includes(athlete.id) && athlete.id !== row.athleteID
                     return (
                       <option key={athlete.id} value={athlete.id} disabled={selectedElsewhere}>
-                        {athlete.name} #{athlete.id}
+                        {athlete.name} #{athlete.jerseyNumber}
                       </option>
                     )
                   })}

@@ -6,7 +6,6 @@ export default function CoachesInsertPage() {
   const navigate = useNavigate()
 
   const [form, setForm] = useState({
-    id:      '',
     name:    '',
     email:   '',
     phoneNo: '',
@@ -21,15 +20,14 @@ export default function CoachesInsertPage() {
   const handleSubmit = async () => {
     setError(null)
 
-    if (!form.id || !form.name || !form.email) {
-      setError('ID, name, and email are required.')
+    if (!form.name || !form.email) {
+      setError('Name and email are required.')
       return
     }
 
     setSaving(true)
     try {
       await addCoach({
-        id:      Number(form.id),
         name:    form.name.trim(),
         email:   form.email.trim(),
         phoneNo: form.phoneNo.trim(),
@@ -53,18 +51,6 @@ export default function CoachesInsertPage() {
 
       <div className="form-card">
         {error && <p className="form-error">{error}</p>}
-
-        <div className="form-group">
-          <label className="form-label">Coach ID</label>
-          <input
-            className="form-input"
-            type="number"
-            name="id"
-            value={form.id}
-            onChange={handleChange}
-            placeholder="e.g. 6"
-          />
-        </div>
 
         <div className="form-group">
           <label className="form-label">Name</label>
