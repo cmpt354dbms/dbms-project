@@ -175,11 +175,6 @@ useEffect(() => {
         </button>
       </div>
 
-<div className="page-nav">
-        <button className="secondary-button" onClick={() => navigate('/games')}>Games</button>
-        <button className="secondary-button" onClick={() => navigate('/colleges')}>Colleges</button>
-        <button className="secondary-button" onClick={() => navigate('/coaches')}>Coaches</button>
-      </div>
 
       {/* ── Tournament Summary Banner ──────────────────────────── */}
       {summary && (
