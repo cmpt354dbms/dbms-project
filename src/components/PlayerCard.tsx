@@ -1,14 +1,6 @@
 import { useState } from 'react'
 import type { AthleteWithStats } from '../types'
-
-// ─── Props ────────────────────────────────────────────────────────────────────
-// Pass an array of game records for this athlete.
-// With one game: <PlayerCard games={[modalAthlete]} />
-// With multiple games: <PlayerCard games={allGamesForAthlete} />
-interface PlayerCardProps {
-  games: AthleteWithStats[]
-  onClose?: () => void;
-}
+import type { PlayerCardProps } from '../types'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function avg(games: AthleteWithStats[], key: keyof AthleteWithStats): number {
@@ -27,11 +19,11 @@ function initials(name: string): string {
 
 // ─── Extra stat toggle definitions ───────────────────────────────────────────
 const EXTRA_STATS = [
-  { key: 'fgPct',             label: 'FG%'   },
-  { key: 'threePointersMade', label: '3PM'   },
-  { key: 'ftPct',             label: 'FT%'   },
-  { key: 'blocks',            label: 'BLK'   },
-  { key: 'fouls',             label: 'Fouls' },
+  { key: 'fgPct', label: 'FG%'},
+  { key: 'threePointersMade', label: '3PM'},
+  { key: 'ftPct', label: 'FT%'},
+  { key: 'blocks', label: 'BLK'},
+  { key: 'fouls', label: 'Fouls'},
 ] as const
 
 type ExtraKey = typeof EXTRA_STATS[number]['key']
@@ -40,16 +32,16 @@ type ExtraKey = typeof EXTRA_STATS[number]['key']
 function CheckIcon({ checked }: { checked: boolean }) {
   return (
     <span style={{
-      width:          '12px',
-      height:         '12px',
-      borderRadius:   '2px',
-      border:         checked ? '1.5px solid #1d4ed8' : '1.5px solid #d1d5db',
-      background:     checked ? '#1d4ed8' : 'transparent',
-      display:        'inline-flex',
-      alignItems:     'center',
+     width: '12px',
+      height: '12px',
+      borderRadius: '2px',
+      border: checked ? '1.5px solid #1d4ed8' : '1.5px solid #d1d5db',
+      background: checked ? '#1d4ed8' : 'transparent',
+      display: 'inline-flex',
+      alignItems: 'center',
       justifyContent: 'center',
-      flexShrink:     0,
-      transition:     'all 0.1s',
+      flexShrink: 0,
+      transition: 'all 0.1s',
     }}>
       {checked && (
         <svg width="7" height="5" viewBox="0 0 7 5" fill="none">
@@ -84,15 +76,15 @@ export default function PlayerCard({ games }: PlayerCardProps) {
   const totalFga = games.reduce((s, g) => s + (g.shotsAttempted ?? 0), 0)
   const totalFtm = games.reduce((s, g) => s + (g.freeThrowsMade ?? 0), 0)
   const totalFta = games.reduce((s, g) => s + (g.freeThrowsAttempted ?? 0), 0)
-  const fgPct    = totalFga > 0 ? (totalFgm / totalFga) * 100 : 0
-  const ftPct    = totalFta > 0 ? (totalFtm / totalFta) * 100 : 0
+  const fgPct = totalFga > 0 ? (totalFgm / totalFga) * 100 : 0
+  const ftPct = totalFta > 0 ? (totalFtm / totalFta) * 100 : 0
 
   const extraValues: Record<ExtraKey, string> = {
-    fgPct:             `${fgPct.toFixed(1)}%`,
+    fgPct: `${fgPct.toFixed(1)}%`,
     threePointersMade: fmt(avg3pm),
-    ftPct:             `${ftPct.toFixed(1)}%`,
-    blocks:            fmt(avgBlk),
-    fouls:             fmt(avgFouls),
+    ftPct: `${ftPct.toFixed(1)}%`,
+    blocks: fmt(avgBlk),
+    fouls: fmt(avgFouls),
   }
 
   const toggleExtra = (key: ExtraKey) => {
@@ -130,9 +122,9 @@ export default function PlayerCard({ games }: PlayerCardProps) {
       {/* ── Info grid: two-column label / value ── */}
       <div style={s.infoGrid}>
         {[
-          { key: 'School',   val: athlete.highSchool      },
-          { key: 'Division', val: athlete.division ?? '—' },
-          { key: 'Email',    val: athlete.email            },
+          { key: 'School', val: athlete.highSchool},
+          { key: 'Division', val: athlete.division ?? '—'},
+          { key: 'Email', val: athlete.email},
         ].map(row => (
           <>
             <span key={row.key + '-k'} style={s.infoKey}>{row.key}</span>

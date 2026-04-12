@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-
+import Navbar from './components/Navbar'
 import AthletesPage from './pages/AthletesPage'
 import AthleteEditPage from './pages/EditPage'
 import AthleteInsertPage from './pages/InsertPage'
@@ -22,6 +22,7 @@ import ScholarshipInsertPage from './pages/ScholarshipInsertPage'
 export default function App() {
   return (
     <BrowserRouter>
+    <Navbar />
     <Routes>
       <Route path="/" element={<AthletesPage/>} />
       <Route path="/athletes" element={<AthletesPage />} />
