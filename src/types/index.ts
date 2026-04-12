@@ -60,6 +60,26 @@ export interface Game {
   gameDate: string
 }
 
+export interface TeamOption {
+  name: string
+  location: string
+  division: string
+}
+
+export interface GameTeamSummary {
+  teamName: string
+  totalScore: number
+  playerCount: number
+}
+
+export interface GameSummary {
+  gameID: number
+  gameDate: string
+  teams: GameTeamSummary[]
+  totalScore: number
+  filmURL?: string
+}
+
 export interface GameStat {
   athleteID: number
   gameID: number
@@ -138,4 +158,40 @@ export interface AthleteFormData {
   email: string
   highSchool: string
   position: 'Guard' | 'Forward' | 'Centre'
+}
+
+export interface GameStatsFormRow {
+  athleteID: number | ''
+  points: number | ''
+  shotsMade: number | ''
+  shotsAttempted: number | ''
+  threePointersMade: number | ''
+  freeThrowsMade: number | ''
+  freeThrowsAttempted: number | ''
+  fouls: number | ''
+  blocks: number | ''
+  rebounds: number | ''
+  assists: number | ''
+  steals: number | ''
+}
+
+export interface GameTeamFormSection {
+  teamName: string
+  stats: GameStatsFormRow[]
+}
+
+export interface GameFormPayload {
+  gameID?: number
+  gameDate: string
+  filmURL?: string
+  teams: GameTeamFormSection[]
+}
+
+export interface GameDetailResponse {
+  game: Game
+  filmURL: string
+  teams: Array<{
+    teamName: string
+    stats: Array<GameStatsFormRow & { athleteName?: string }>
+  }>
 }
