@@ -43,18 +43,15 @@ export default function GameEditorForm({
   }
 
   return (
-    <div className="game-editor-page">
-      <div className="page-heading-row">
-        <div>
-          <h1>{mode === 'insert' ? 'Add Game' : `Edit Game #${gameID}`}</h1>
-          <p className="muted-text">Enter both teams and at least one player stat row per team.</p>
-        </div>
-        <button className="secondary-button" type="button" onClick={onCancel}>
-          Cancel
+    <div className="page">
+      <div className="page-header">
+        <h1>{mode === 'insert' ? 'Add Game' : `Edit Game #${gameID}`}</h1>
+        <button className="btn btn-ghost" type="button" onClick={onCancel}>
+          ← Back
         </button>
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && <p className="form-error">{error}</p>}
 
       <section className="game-section">
         <h2>Game Details</h2>
@@ -98,19 +95,19 @@ export default function GameEditorForm({
         onChange={section => updateTeam(1, section)}
       />
 
-      <div className="form-actions">
+      <div className="form-actions" style={{ justifyContent: 'space-between' }}>
         <div>
           {mode === 'edit' && onDelete && (
-            <button className="danger-button" type="button" onClick={onDelete} disabled={saving}>
+            <button className="btn btn-danger" type="button" onClick={onDelete} disabled={saving}>
               Delete Game
             </button>
           )}
         </div>
         <div className="form-actions-right">
-          <button className="secondary-button" type="button" onClick={onCancel}>
+          <button className="btn btn-ghost" type="button" onClick={onCancel}>
             Cancel
           </button>
-          <button className="primary-button" type="button" onClick={onSubmit} disabled={saving}>
+          <button className="btn btn-primary" type="button" onClick={onSubmit} disabled={saving}>
             {saving ? 'Saving...' : mode === 'insert' ? 'Create Game' : 'Save Changes'}
           </button>
         </div>

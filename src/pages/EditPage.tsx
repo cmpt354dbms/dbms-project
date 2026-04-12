@@ -54,46 +54,57 @@ export default function AthleteEditPage() {
     }
   }
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <p className="page">Loading...</p>
 
   return (
-    <div>
-      <h1>Edit Athlete</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      <div>
-        <label>Jersey Number (0–99)</label>
-        <input
-          type="number"
-          min={0}
-          max={99}
-          value={form.jerseyNumber}
-          onChange={e => {
-            const val = e.target.value === '' ? '' : Number(e.target.value)
-            setForm({ ...form, jerseyNumber: val as number | '' })
-          }}
-        />
+    <div className="page">
+      <div className="page-header">
+        <h1>Edit Athlete</h1>
+        <button className="btn btn-ghost" onClick={() => navigate('/athletes')}>
+          ← Back
+        </button>
       </div>
 
-      <div>
-        <label>Name</label>
-        <input
-          value={form.name}
-          onChange={e => setForm({ ...form, name: e.target.value })}
-        />
-      </div>
+      <div className="form-card">
+        {error && <p className="form-error">{error}</p>}
 
-      <div>
-        <label>Email</label>
-        <input
-          value={form.email}
-          onChange={e => setForm({ ...form, email: e.target.value })}
-        />
-      </div>
+        <div className="form-group">
+          <label className="form-label">Jersey Number (0–99)</label>
+          <input
+            className="form-input"
+            type="number"
+            min={0}
+            max={99}
+            value={form.jerseyNumber}
+            onChange={e => {
+              const val = e.target.value === '' ? '' : Number(e.target.value)
+              setForm({ ...form, jerseyNumber: val as number | '' })
+            }}
+          />
+        </div>
 
-      <div>
-        <label>High School</label>
+        <div className="form-group">
+          <label className="form-label">Name</label>
+          <input
+            className="form-input"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Email</label>
+          <input
+            className="form-input"
+            value={form.email}
+            onChange={e => setForm({ ...form, email: e.target.value })}
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">High School</label>
           <select
+            className="form-input"
             value={form.highSchool}
             onChange={e => setForm({ ...form, highSchool: e.target.value })}
           >
@@ -101,22 +112,30 @@ export default function AthleteEditPage() {
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
-      </div>
+        </div>
 
-      <div>
-        <label>Position</label>
-        <select
-          value={form.position}
-          onChange={e => setForm({ ...form, position: e.target.value as 'Guard' | 'Forward' | 'Centre' })}
-        >
-          <option value="Guard">Guard</option>
-          <option value="Forward">Forward</option>
-          <option value="Centre">Centre</option>
-        </select>
-      </div>
+        <div className="form-group">
+          <label className="form-label">Position</label>
+          <select
+            className="form-input"
+            value={form.position}
+            onChange={e => setForm({ ...form, position: e.target.value as 'Guard' | 'Forward' | 'Centre' })}
+          >
+            <option value="Guard">Guard</option>
+            <option value="Forward">Forward</option>
+            <option value="Centre">Centre</option>
+          </select>
+        </div>
 
-      <button onClick={handleSubmit}>Save Changes</button>
-      <button onClick={() => navigate('/athletes')}>Cancel</button>
+        <div className="form-actions">
+          <button className="btn btn-primary" onClick={handleSubmit}>
+            Save Changes
+          </button>
+          <button className="btn btn-ghost" onClick={() => navigate('/athletes')}>
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

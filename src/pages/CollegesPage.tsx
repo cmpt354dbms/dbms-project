@@ -29,22 +29,18 @@ export default function CollegesPage() {
     }
   }
 
-  if (loading) return <p className="page">Loading colleges...</p>
+  if (loading) return <p className="page">Loading...</p>
 
   return (
-    <div className="games-page">
-      <div className="page-heading-row">
-        <div>
-          <h1>Colleges</h1>
-          <p className="muted-text">University teams and their assigned recruiting coaches.</p>
-        </div>
-        <button className="primary-button" onClick={() => navigate('/colleges/new')}>
+    <div className="page">
+      <div className="page-header">
+        <h1>Colleges</h1>
+        <button className="btn btn-primary" onClick={() => navigate('/colleges/new')}>
           + Add College
         </button>
       </div>
 
-
-      {error && <div className="error-banner">{error}</div>}
+      {error && <p className="form-error">{error}</p>}
 
       <div className="games-grid">
         {teams.map(team => (
@@ -55,7 +51,8 @@ export default function CollegesPage() {
                 <p>{team.location}</p>
               </div>
               <button
-                className="icon-button"
+                className="btn btn-ghost btn-sm"
+                style={{ color: '#fff' }}
                 onClick={() => navigate(`/colleges/${encodeURIComponent(team.name)}/edit`)}
               >
                 Edit
@@ -78,7 +75,7 @@ export default function CollegesPage() {
             </div>
 
             <div className="management-card-actions">
-              <button className="danger-icon-button" onClick={() => handleDelete(team)}>
+              <button className="btn btn-danger btn-sm" onClick={() => handleDelete(team)}>
                 Delete
               </button>
             </div>
@@ -86,7 +83,7 @@ export default function CollegesPage() {
         ))}
       </div>
 
-      {teams.length === 0 && <p>No colleges found.</p>}
+      {teams.length === 0 && <p className="empty-state">No colleges found.</p>}
     </div>
   )
 }

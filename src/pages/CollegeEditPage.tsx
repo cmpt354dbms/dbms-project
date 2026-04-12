@@ -77,40 +77,40 @@ export default function CollegeEditPage() {
     }
   }
 
-  if (loading) return <p className="page">Loading college...</p>
+  if (loading) return <p className="page">Loading...</p>
 
   const availableCoaches = coaches.filter(coach => !coach.university || coach.id === currentCoachID)
 
   return (
-    <div className="game-editor-page">
-      <div className="page-heading-row">
-        <div>
-          <h1>Edit College</h1>
-          <p className="muted-text">Update the university team and assigned coach.</p>
-        </div>
-        <button className="secondary-button" type="button" onClick={() => navigate('/colleges')}>
-          Cancel
+    <div className="page">
+      <div className="page-header">
+        <h1>Edit College</h1>
+        <button className="btn btn-ghost" onClick={() => navigate('/colleges')}>
+          ← Back
         </button>
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
+      <div className="form-card">
+        {error && <p className="form-error">{error}</p>}
 
-      <section className="game-section management-form">
-        <label>
-          Name
-          <input name="name" value={form.name} onChange={handleTextChange} />
-        </label>
-        <label>
-          Location
-          <input name="location" value={form.location} onChange={handleTextChange} />
-        </label>
-        <label>
-          Division
-          <input name="division" value={form.division} onChange={handleTextChange} />
-        </label>
-        <label>
-          Coach
-          <select value={form.coachID} onChange={handleCoachChange}>
+        <div className="form-group">
+          <label className="form-label">Name</label>
+          <input className="form-input" name="name" value={form.name} onChange={handleTextChange} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Location</label>
+          <input className="form-input" name="location" value={form.location} onChange={handleTextChange} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Division</label>
+          <input className="form-input" name="division" value={form.division} onChange={handleTextChange} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Coach</label>
+          <select className="form-input" value={form.coachID} onChange={handleCoachChange}>
             <option value="">No coach</option>
             {availableCoaches.map(coach => (
               <option key={coach.id} value={coach.id}>
@@ -123,16 +123,16 @@ export default function CollegeEditPage() {
               No available coaches. <Link className="management-help-link" to="/coaches/new">Add a new coach</Link>.
             </span>
           )}
-        </label>
-      </section>
+        </div>
 
-      <div className="form-actions">
-        <button className="secondary-button" type="button" onClick={() => navigate('/colleges')}>
-          Cancel
-        </button>
-        <button className="primary-button" type="button" onClick={handleSubmit} disabled={saving}>
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+        <div className="form-actions">
+          <button className="btn btn-primary" type="button" onClick={handleSubmit} disabled={saving}>
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+          <button className="btn btn-ghost" type="button" onClick={() => navigate('/colleges')} disabled={saving}>
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -69,7 +69,7 @@ export default function GameInsertPage() {
     }
   }
 
-  if (loading) return <p>Loading game form...</p>
+  if (loading) return <p className="page">Loading...</p>
 
   return (
     <GameEditorForm
