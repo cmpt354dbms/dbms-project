@@ -552,3 +552,48 @@ INSERT INTO Centre (athleteID) VALUES
 (158), (159), (160),
 (168), (169), (170),
 (178), (179), (180);
+
+
+-- TRIGGERS --
+
+-- TRIGGER 1: prevent fouls exceeding 5 on INSERT
+-- basketball rule: a player is fouled out after 5 fouls
+CREATE TRIGGER check_fouls_limit_insert
+BEFORE INSERT ON GameStats
+BEGIN
+    SELECT CASE
+        WHEN NEW.fouls > 5 THEN
+            RAISE(ABORT, 'A player cannot have more than 5 fouls in a game')
+    END;
+END;
+
+-- TRIGGER 2: prevent fouls exceeding 5 on UPDATE
+CREATE TRIGGER check_fouls_limit_update
+BEFORE UPDATE ON GameStats
+BEGIN
+    SELECT CASE
+        WHEN NEW.fouls > 5 THEN
+            RAISE(ABORT, 'A player cannot have more than 5 fouls in a game')
+    END;
+END;
+
+-- TRIGGER 3: auto-enforce Walk-On scholarship must be 0
+-- business rule: walk-on offers cannot have scholarship money
+CREATE TRIGGER enforce_walkon_scholarship_insert
+BEFORE INSERT ON Interested
+BEGIN
+    SELECT CASE
+        WHEN NEW.offerType IN ('Walk-On', 'Preferred Walk-On') AND NEW.scholarshipAmount > 0 THEN
+            RAISE(ABORT, 'Walk-On and Preferred Walk-On offers cannot have a scholarship amount')
+    END;
+END;
+
+-- TRIGGER 4: same rule on UPDATE
+CREATE TRIGGER enforce_walkon_scholarship_update
+BEFORE UPDATE ON Interested
+BEGIN
+    SELECT CASE
+        WHEN NEW.offerType IN ('Walk-On', 'Preferred Walk-On') AND NEW.scholarshipAmount > 0 THEN
+            RAISE(ABORT, 'Walk-On and Preferred Walk-On offers cannot have a scholarship amount')
+    END;
+END;
