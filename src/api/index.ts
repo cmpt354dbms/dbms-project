@@ -7,6 +7,7 @@ import type {
 } from '../types'
 
 const BASE_URL = '/api'
+export const API = 'http://localhost:5000/api'
 
 export const getAthletes = async (): Promise<AthleteWithStats[]> => {
   const res = await fetch(`${BASE_URL}/athletes`)
@@ -55,6 +56,53 @@ export const editAthlete = async (id: number, athlete: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(athlete)
   })
+  return res.json()
+}
+
+export const getCoaches = async () => {
+  const res = await fetch(`${BASE_URL}/coaches`)
+  return res.json()
+}
+ 
+export const getCoach = async (id: number) => {
+  const res = await fetch(`${BASE_URL}/coaches/${id}`)
+  return res.json()
+}
+ 
+export const deleteCoach = async (id: number): Promise<{ message: string }> => {
+  const res = await fetch(`${BASE_URL}/coaches/${id}`, { method: 'DELETE' })
+  return res.json()
+}
+ 
+export const addCoach = async (coach: {
+  id: number
+  name: string
+  email: string
+  phoneNo: string
+}): Promise<{ message: string }> => {
+  const res = await fetch(`${BASE_URL}/coaches`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(coach),
+  })
+  return res.json()
+}
+ 
+export const editCoach = async (id: number, coach: {
+  name: string
+  email: string
+  phoneNo: string
+}): Promise<{ message: string }> => {
+  const res = await fetch(`${BASE_URL}/coaches/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(coach),
+  })
+  return res.json()
+}
+ 
+export const getUniversities = async (): Promise<{ name: string; division: string }[]> => {
+  const res = await fetch(`${BASE_URL}/universities`)
   return res.json()
 }
 

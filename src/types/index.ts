@@ -195,3 +195,39 @@ export interface GameDetailResponse {
     stats: Array<GameStatsFormRow & { athleteName?: string }>
   }>
 }
+
+// Pass an array of game records for this athlete
+export interface PlayerCardProps {
+  games: AthleteWithStats[]
+  onClose?: () => void;
+}
+
+export interface CoachCardProps {
+  coach:    Coach
+  onClick:  () => void
+  onEdit:   () => void
+  onDelete: () => void
+}
+
+export interface CoachDetailCardProps {
+  detail:   CoachDetail
+  onClose:  () => void
+}
+ 
+ 
+// One athlete in the coach's recruit list from JOIN across Interested + Athlete + HighSchool
+export interface Recruit {
+  athleteID:         number
+  athleteName:       string
+  athleteEmail:      string
+  highSchool:        string | null
+  division:          string | null
+  position:          'Guard' | 'Forward' | 'Centre' | null
+  offerType:         'Full' | 'Partial' | 'Walk-On' | 'Preferred Walk-On'
+  scholarshipAmount: number
+}
+ 
+// Full response from GET /api/coaches/:id
+export interface CoachDetail extends Coach {
+  recruits: Recruit[]
+}
