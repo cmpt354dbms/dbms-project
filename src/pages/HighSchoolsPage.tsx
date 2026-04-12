@@ -36,7 +36,7 @@ export default function HighSchoolsPage() {
     }
   }
 
-  if (loading) return <p className="page">Loading high schools...</p>
+  if (loading) return <p className="page">Loading...</p>
 
   const selectedSchool = selectedSchoolName
     ? schools.find(school => school.name === selectedSchoolName)
@@ -48,19 +48,15 @@ export default function HighSchoolsPage() {
     : []
 
   return (
-    <div className="games-page">
-      <div className="page-heading-row">
-        <div>
-          <h1>High Schools</h1>
-          <p className="muted-text">Tournament teams used by athletes and game records.</p>
-        </div>
-        <button className="primary-button" onClick={() => navigate('/high-schools/new')}>
+    <div className="page">
+      <div className="page-header">
+        <h1>High Schools</h1>
+        <button className="btn btn-primary" onClick={() => navigate('/high-schools/new')}>
           + Add High School
         </button>
       </div>
 
-
-      {error && <div className="error-banner">{error}</div>}
+      {error && <p className="form-error">{error}</p>}
 
       {selectedSchool && (
         <section className="game-section">
@@ -69,7 +65,7 @@ export default function HighSchoolsPage() {
               <h2>{selectedSchool.name} Roster</h2>
               <p className="muted-text">{selectedSchool.location} · {selectedSchool.division}</p>
             </div>
-            <button className="primary-button" onClick={() => navigate('/athletes/new')}>
+            <button className="btn btn-primary btn-sm" onClick={() => navigate('/athletes/new')}>
               + Add Athlete
             </button>
           </div>
@@ -104,7 +100,8 @@ export default function HighSchoolsPage() {
                 <p>{school.location}</p>
               </div>
               <button
-                className="icon-button"
+                className="btn btn-ghost btn-sm"
+                style={{ color: '#fff' }}
                 onClick={event => {
                   event.stopPropagation()
                   navigate(`/high-schools/${encodeURIComponent(school.name)}/edit`)
@@ -131,7 +128,7 @@ export default function HighSchoolsPage() {
 
             <div className="management-card-actions">
               <button
-                className="danger-icon-button"
+                className="btn btn-danger btn-sm"
                 onClick={event => {
                   event.stopPropagation()
                   handleDelete(school)
@@ -144,7 +141,7 @@ export default function HighSchoolsPage() {
         ))}
       </div>
 
-      {schools.length === 0 && <p>No high schools found.</p>}
+      {schools.length === 0 && <p className="empty-state">No high schools found.</p>}
     </div>
   )
 }

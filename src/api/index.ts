@@ -57,7 +57,7 @@ export const deleteAthlete = async (id: number): Promise<{ message: string }> =>
 */
 
 export const addAthlete = async (athlete: {
-  id: number
+  jerseyNumber: number
   name: string
   email: string
   highSchool: string
@@ -68,10 +68,13 @@ export const addAthlete = async (athlete: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(athlete)
   })
-  return res.json()
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error ?? 'Failed to add athlete.')
+  return data
 }
 
 export const editAthlete = async (id: number, athlete: {
+  jerseyNumber: number
   name: string
   email: string
   highSchool: string
@@ -82,7 +85,9 @@ export const editAthlete = async (id: number, athlete: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(athlete)
   })
-  return res.json()
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error ?? 'Failed to update athlete.')
+  return data
 }
 
 export const getCoaches = async (): Promise<Coach[]> => {

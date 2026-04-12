@@ -39,41 +39,40 @@ export default function HighSchoolInsertPage() {
   }
 
   return (
-    <div className="game-editor-page">
-      <div className="page-heading-row">
-        <div>
-          <h1>Add High School</h1>
-          <p className="muted-text">Create a tournament team for athletes and games.</p>
-        </div>
-        <button className="secondary-button" type="button" onClick={() => navigate('/high-schools')}>
-          Cancel
+    <div className="page">
+      <div className="page-header">
+        <h1>Add High School</h1>
+        <button className="btn btn-ghost" onClick={() => navigate('/high-schools')}>
+          ← Back
         </button>
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
+      <div className="form-card">
+        {error && <p className="form-error">{error}</p>}
 
-      <section className="game-section management-form">
-        <label>
-          Name
-          <input name="name" value={form.name} onChange={handleChange} />
-        </label>
-        <label>
-          Location
-          <input name="location" value={form.location} onChange={handleChange} />
-        </label>
-        <label>
-          Division
-          <input name="division" value={form.division} onChange={handleChange} />
-        </label>
-      </section>
+        <div className="form-group">
+          <label className="form-label">Name</label>
+          <input className="form-input" name="name" value={form.name} onChange={handleChange} placeholder="School name" />
+        </div>
 
-      <div className="form-actions">
-        <button className="secondary-button" type="button" onClick={() => navigate('/high-schools')}>
-          Cancel
-        </button>
-        <button className="primary-button" type="button" onClick={handleSubmit} disabled={saving}>
-          {saving ? 'Saving...' : 'Add High School'}
-        </button>
+        <div className="form-group">
+          <label className="form-label">Location</label>
+          <input className="form-input" name="location" value={form.location} onChange={handleChange} placeholder="City, Province" />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Division</label>
+          <input className="form-input" name="division" value={form.division} onChange={handleChange} placeholder="e.g. AAAA" />
+        </div>
+
+        <div className="form-actions">
+          <button className="btn btn-primary" type="button" onClick={handleSubmit} disabled={saving}>
+            {saving ? 'Saving...' : 'Add High School'}
+          </button>
+          <button className="btn btn-ghost" type="button" onClick={() => navigate('/high-schools')} disabled={saving}>
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   )

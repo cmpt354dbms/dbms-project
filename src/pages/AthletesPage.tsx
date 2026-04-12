@@ -9,7 +9,7 @@ import DateRangeSlider from '../components/DateRangeSlider'
 
 const SORT_OPTIONS = [
   { key: 'name',     label: 'Name' },
-  { key: 'id',       label: 'ID' },
+  { key: 'jerseyNumber', label: 'Jersey #' },
   { key: 'points',   label: 'Points' },
   { key: 'rebounds',  label: 'Rebounds' },
   { key: 'assists',   label: 'Assists' },
@@ -151,7 +151,7 @@ useEffect(() => {
       let cmp = 0
       switch (sortKey) {
         case 'name':     cmp = a.name.localeCompare(b.name); break
-        case 'id':       cmp = a.id - b.id; break
+        case 'jerseyNumber': cmp = a.jerseyNumber - b.jerseyNumber; break
         case 'points':   cmp = (a.points ?? 0) - (b.points ?? 0); break
         case 'rebounds':  cmp = (a.rebounds ?? 0) - (b.rebounds ?? 0); break
         case 'assists':   cmp = (a.assists ?? 0) - (b.assists ?? 0); break

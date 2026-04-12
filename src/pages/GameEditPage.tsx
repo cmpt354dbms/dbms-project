@@ -82,7 +82,7 @@ export default function GameEditPage() {
     }
   }
 
-  if (loading) return <p>Loading game...</p>
+  if (loading) return <p className="page">Loading...</p>
 
   return (
     <GameEditorForm

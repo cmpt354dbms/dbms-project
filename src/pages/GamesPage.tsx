@@ -33,7 +33,7 @@ export default function GamesPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <p>Loading games...</p>
+  if (loading) return <p className="page">Loading...</p>
 
   const filteredGames = games.filter(game => {
     const matchesTeam = teamFilter
@@ -51,42 +51,32 @@ export default function GamesPage() {
   }
 
   return (
-    <div className="games-page">
-      <div className="page-heading-row">
-        <div>
-          <h1>Games</h1>
-          <p className="muted-text">Chronological game records built from player stat rows.</p>
-        </div>
-        <button className="primary-button" onClick={() => navigate('/games/new')}>
+    <div className="page">
+      <div className="page-header">
+        <h1>Games</h1>
+        <button className="btn btn-primary" onClick={() => navigate('/games/new')}>
           + Add Game
         </button>
       </div>
 
+      {error && <p className="form-error">{error}</p>}
 
-      {error && <div className="error-banner">{error}</div>}
-
-      <section className="game-filters">
-        <label>
-          Team
-          <select value={teamFilter} onChange={event => setTeamFilter(event.target.value)}>
-            <option value="">All teams</option>
-            {teams.map(team => (
-              <option key={team.name} value={team.name}>{team.name}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Start date
-          <input type="date" value={startDate} onChange={event => setStartDate(event.target.value)} />
-        </label>
-        <label>
-          End date
-          <input type="date" value={endDate} onChange={event => setEndDate(event.target.value)} />
-        </label>
-        <button className="secondary-button" type="button" onClick={clearFilters}>
+      <div className="filter-bar">
+        <span className="filter-label">Team</span>
+        <select value={teamFilter} onChange={event => setTeamFilter(event.target.value)}>
+          <option value="">All teams</option>
+          {teams.map(team => (
+            <option key={team.name} value={team.name}>{team.name}</option>
+          ))}
+        </select>
+        <span className="filter-label">From</span>
+        <input type="date" value={startDate} onChange={event => setStartDate(event.target.value)} />
+        <span className="filter-label">To</span>
+        <input type="date" value={endDate} onChange={event => setEndDate(event.target.value)} />
+        <button className="filter-btn" type="button" onClick={clearFilters}>
           Clear filters
         </button>
-      </section>
+      </div>
 
       <div className="games-grid">
         {filteredGames.map(game => (
@@ -97,7 +87,8 @@ export default function GamesPage() {
                 <p>Game #{game.gameID}</p>
               </div>
               <button
-                className="icon-button"
+                className="btn btn-ghost btn-sm"
+                style={{ color: '#fff' }}
                 title="Edit game"
                 onClick={() => navigate(`/games/${game.gameID}/edit`)}
               >
@@ -130,7 +121,7 @@ export default function GamesPage() {
         ))}
       </div>
 
-      {filteredGames.length === 0 && <p>No games found.</p>}
+      {filteredGames.length === 0 && <p className="empty-state">No games found.</p>}
     </div>
   )
 }
