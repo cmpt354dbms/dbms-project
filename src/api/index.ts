@@ -297,3 +297,8 @@ export async function getAthletesFullFilmCoverage(): Promise<AthleteWithStats[]>
   const res = await fetch('/api/athletes/full-film-coverage')
   return res.json()
 }
+
+export async function getTournamentSummary() {
+  const res = await fetch('/api/stats/tournament-summary')
+  return res.json()
+}
