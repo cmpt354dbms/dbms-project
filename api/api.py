@@ -15,10 +15,12 @@ CORS(app)
 from routes.athletes import athletes_bp
 from routes.coaches import coaches_bp
 from routes.games import games_bp
+from routes.schools import schools_bp
 
 app.register_blueprint(athletes_bp);
 app.register_blueprint(coaches_bp);
 app.register_blueprint(games_bp);
+app.register_blueprint(schools_bp);
 
 if __name__ == '__main__':
     app.run(debug=True)

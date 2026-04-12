@@ -20,9 +20,13 @@ async function deleteCoachAPI(id: number): Promise<void> {
   await fetch(`${API}/coaches/${id}`, { method: 'DELETE' })
 }
 
+async function deleteScholarshipAPI(coachID: number, athleteID: number): Promise<void> {
+  const res = await fetch(`${API}/scholarships/${coachID}/${athleteID}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Failed to remove scholarship')
+}
+
 const SORT_OPTIONS = [
   { key: 'name', label: 'Name'},
-  { key: 'id', label: 'ID'},
   { key: 'university', label: 'University'},
 ]
 
@@ -71,7 +75,7 @@ function CoachCard({ coach, onClick, onEdit, onDelete }: CoachCardProps) {
 }
 
 
-function CoachDetailCard({ detail, onClose }: CoachDetailCardProps) {
+function CoachDetailCard({ detail, onClose, onAddScholarship, onRemoveScholarship }: CoachDetailCardProps) {
   const totalScholarships = detail.recruits.reduce(
     (sum, r) => sum + (r.scholarshipAmount ?? 0), 0
   )
@@ -104,11 +108,22 @@ function CoachDetailCard({ detail, onClose }: CoachDetailCardProps) {
       <hr style={s.divider} />
 
       {/* ── Recruit list ── */}
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
+        <div>
         <p style={s.sectionLabel}>Recruits — {detail.recruits.length}</p>
         {detail.recruits.length > 0 && (
           <p style={{ ...s.sectionLabel, margin: 0 }}>
             Total scholarships: ${totalScholarships.toLocaleString()}
+          </p>
+        )}
+        </div>
+        {detail.university ? onAddScholarship && (
+          <button style={s.actionBtn} onClick={onAddScholarship}>
+            + Add Scholarship
+          </button>
+        ) : (
+          <p style={{ ...s.emptyText, margin: 0, textAlign: 'right' }}>
+            Assign a college before recruiting.
           </p>
         )}
       </div>
@@ -120,7 +135,7 @@ function CoachDetailCard({ detail, onClose }: CoachDetailCardProps) {
           {detail.recruits.map((r: Recruit) => (
             <div key={r.athleteID} style={s.recruitRow}>
               <div style={s.recruitLeft}>
-                <p style={s.recruitName}>{r.athleteName}</p>
+                <p style={s.recruitName}>#{r.jerseyNumber} {r.athleteName}</p>
                 <p style={s.recruitSub}>
                   {/* highSchool is nullable (ON DELETE SET NULL on Athlete.highSchool) */}
                   {r.highSchool ?? 'No school'} · {r.position ?? '—'}
@@ -134,6 +149,11 @@ function CoachDetailCard({ detail, onClose }: CoachDetailCardProps) {
                   <p style={s.scholarshipAmt}>
                     ${r.scholarshipAmount.toLocaleString()}
                   </p>
+                )}
+                {onRemoveScholarship && (
+                  <button style={{ ...s.actionBtn, ...s.actionBtnDanger }} onClick={() => onRemoveScholarship(r.athleteID)}>
+                    Remove
+                  </button>
                 )}
               </div>
             </div>
@@ -208,6 +228,15 @@ export default function CoachesPage() {
     setSelectedUnis(prev => { const next = new Set(prev); next.has(uni) ? next.delete(uni) : next.add(uni); return next })
   }
 
+  const handleRemoveScholarship = async (coachID: number, athleteID: number) => {
+    if (!window.confirm('Remove this scholarship/recruit record?')) return
+    await deleteScholarshipAPI(coachID, athleteID)
+    setDetail(prev => prev
+      ? { ...prev, recruits: prev.recruits.filter(recruit => recruit.athleteID !== athleteID) }
+      : prev
+    )
+  }
+
 
   // Filter + Sort 
 
@@ -221,7 +250,6 @@ export default function CoachesPage() {
       let cmp = 0
       switch (sortKey) {
         case 'name': cmp = a.name.localeCompare(b.name); break
-        case 'id': cmp = a.id - b.id; break
         case 'university': cmp = (a.university ?? '').localeCompare(b.university ?? ''); break
         default: cmp = 0
       }
@@ -287,7 +315,7 @@ export default function CoachesPage() {
             key={c.id}
             coach={c}
             onClick={() => openDetail(c)}
-            onEdit={() => navigate(`/coaches/${c.id}/edit`)}
+            onEdit={() => navigate(`/coaches/${encodeURIComponent(c.name)}/edit`)}
             onDelete={() => handleDelete(c.id)}
           />
         ))}
@@ -302,7 +330,15 @@ export default function CoachesPage() {
             {loadingDetail ? (
               <p style={{ padding: '2rem', color: '#6b7280' }}>Loading...</p>
             ) : detail ? (
-              <CoachDetailCard detail={detail} onClose={() => setDetail(null)} />
+              <CoachDetailCard
+                detail={detail}
+                onClose={() => setDetail(null)}
+                onAddScholarship={detail.university
+                  ? () => navigate(`/scholarships/new?coachID=${detail.id}`)
+                  : undefined
+                }
+                onRemoveScholarship={athleteID => handleRemoveScholarship(detail.id, athleteID)}
+              />
             ) : null}
           </div>
         </div>

@@ -55,6 +55,7 @@ def get_coach(coach_id):
         # athletes this coach is interested in
         cur.execute("""
             SELECT a.id AS athleteID,
+                   a.jerseyNumber,
                    a.name AS athleteName,
                    a.email AS athleteEmail,
                    a.highSchool,
@@ -133,28 +134,74 @@ def add_coach():
     db = get_db_conn()
     try:
         data = request.get_json()
-        print("Received data:", data)
         cur = db.cursor()
+
+        cur.execute("SELECT COALESCE(MAX(id), 0) + 1 AS nextID FROM Coach")
+        coach_id = cur.fetchone()['nextID']
  
         cur.execute("""
             INSERT INTO Coach (id, name, email, phoneNo)
             VALUES (?, ?, ?, ?)
-        """, (data['id'], data['name'], data['email'], data['phoneNo']))
+        """, (coach_id, data['name'], data['email'], data['phoneNo']))
  
         db.commit()
-        return jsonify({'message': 'Coach added successfully'}), 201
+        return jsonify({'message': 'Coach added successfully', 'id': coach_id}), 201
  
     except sql.Error as e:
         db.rollback()
-        print("SQL ERROR:", e)
         return jsonify({'error': str(e)}), 400
     except Exception as e:
-        print("GENERAL ERROR:", e)
         return jsonify({'error': str(e)}), 400
     finally:
         db.close()
  
  
+@coaches_bp.route('/scholarships', methods=['POST'])
+def add_scholarship():
+    db = get_db_conn()
+    try:
+        data = request.get_json()
+        cur = db.cursor()
+        cur.execute("""
+            INSERT INTO Interested (athleteID, coachID, offerType, scholarshipAmount)
+            VALUES (?, ?, ?, ?)
+        """, (
+            int(data['athleteID']),
+            int(data['coachID']),
+            data['offerType'],
+            float(data.get('scholarshipAmount') or 0),
+        ))
+
+        db.commit()
+        return jsonify({'message': 'Scholarship added successfully'}), 201
+    except (sql.Error, KeyError, ValueError) as e:
+        db.rollback()
+        return jsonify({'error': str(e)}), 400
+    finally:
+        db.close()
+
+
+@coaches_bp.route('/scholarships/<int:coach_id>/<int:athlete_id>', methods=['DELETE'])
+def delete_scholarship(coach_id, athlete_id):
+    db = get_db_conn()
+    try:
+        cur = db.cursor()
+        cur.execute(
+            "DELETE FROM Interested WHERE coachID = ? AND athleteID = ?",
+            (coach_id, athlete_id),
+        )
+        if cur.rowcount == 0:
+            return jsonify({'error': 'Scholarship not found'}), 404
+
+        db.commit()
+        return jsonify({'message': 'Scholarship removed successfully'})
+    except sql.Error as e:
+        db.rollback()
+        return jsonify({'error': str(e)}), 400
+    finally:
+        db.close()
+
+
 # GET universities — used to populate dropdowns in the frontend
 @coaches_bp.route('/universities', methods=['GET'])
 def get_universities():

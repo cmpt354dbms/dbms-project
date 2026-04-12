@@ -24,7 +24,7 @@ def get_athletes():
         cur = db.cursor()
 
         cur.execute("""
-            SELECT a.id, a.name, a.email, a.highSchool, h.division,
+            SELECT a.id, a.name, a.email, a.highSchool, a.jerseyNumber, h.division,
                 CASE
                     WHEN g.athleteID IS NOT NULL THEN 'Guard'
                     WHEN f.athleteID IS NOT NULL THEN 'Forward'
@@ -51,7 +51,7 @@ def get_athletes():
             LEFT JOIN Centre c ON a.id = c.athleteID
             LEFT JOIN GameStats gs ON a.id = gs.athleteID
             LEFT JOIN Game gm ON gs.gameID = gm.gameID
-            GROUP BY a.id, a.name, a.email, a.highSchool, h.division, position
+            GROUP BY a.id, a.name, a.email, a.highSchool, a.jerseyNumber, h.division, position
             ORDER BY a.name ASC
         """)
         rows = cur.fetchall()
@@ -68,7 +68,7 @@ def get_athlete_games(athlete_id):
     try:
         cur = db.cursor()
         cur.execute("""
-            SELECT a.id, a.name, a.email, a.highSchool, h.division,
+            SELECT a.id, a.name, a.email, a.highSchool, a.jerseyNumber, h.division,
                 CASE
                     WHEN g.athleteID IS NOT NULL THEN 'Guard'
                     WHEN f.athleteID IS NOT NULL THEN 'Forward'
@@ -156,7 +156,6 @@ def add_athlete():
     db = get_db_conn()
     try:
         data = request.get_json()
-        print("Received data:", data)  # add this
         cur = db.cursor()
 
         # insert into Athlete table
@@ -179,10 +178,8 @@ def add_athlete():
 
     except sql.Error as e:
         db.rollback()
-        print("SQL ERROR:", e)
         return jsonify({ 'error': str(e) }), 400
     except Exception as e:
-        print("GENERAL ERROR:", e)        # add this
         return jsonify({ 'error': str(e) }), 400
     finally:
         db.close()
@@ -208,7 +205,7 @@ def get_athletes_full_film_coverage():
     try:
         cur = db.cursor()
         cur.execute("""
-            SELECT a.id, a.name, a.email, a.highSchool
+            SELECT a.id, a.name, a.email, a.highSchool, a.jerseyNumber
             FROM Athlete a
             WHERE NOT EXISTS (
                 SELECT gameID FROM GameStats gs

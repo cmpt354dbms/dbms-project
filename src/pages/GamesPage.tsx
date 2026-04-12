@@ -65,6 +65,8 @@ export default function GamesPage() {
       <div className="page-nav">
         <button className="secondary-button" onClick={() => navigate('/athletes')}>Athletes</button>
         <button className="secondary-button" onClick={() => navigate('/games')}>Games</button>
+        <button className="secondary-button" onClick={() => navigate('/high-schools')}>High Schools</button>
+        <button className="secondary-button" onClick={() => navigate('/colleges')}>Colleges</button>
       </div>
 
       {error && <div className="error-banner">{error}</div>}

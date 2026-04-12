@@ -6,7 +6,7 @@ export interface Coach {
   name: string
   email: string
   phoneNo: string
-  university?: string      // from JOIN with UniversityTeam
+  university?: string | null      // from JOIN with UniversityTeam
 }
 
 export interface HighSchool {
@@ -17,6 +17,7 @@ export interface HighSchool {
 
 export interface Athlete {
   id: number
+  jerseyNumber: number
   name: string
   email: string
   highSchool: string
@@ -27,6 +28,7 @@ export interface Athlete {
 // for displaying athlete data alongside their game stats
 export interface AthleteWithStats {
   id: number
+  jerseyNumber: number
   name: string
   email: string
   highSchool: string
@@ -51,8 +53,18 @@ export interface UniversityTeam {
   name: string
   location: string
   division: string
-  coachID: number
+  coachID: number | null
   coachName?: string       // from JOIN with Coach
+  recruitCount?: number
+}
+
+export interface ManagedHighSchool extends HighSchool {
+  athleteCount: number
+  gameCount: number
+}
+
+export interface ManagedUniversityTeam extends UniversityTeam {
+  recruitCount: number
 }
 
 export interface Game {
@@ -212,12 +224,15 @@ export interface CoachCardProps {
 export interface CoachDetailCardProps {
   detail:   CoachDetail
   onClose:  () => void
+  onAddScholarship?: () => void
+  onRemoveScholarship?: (athleteID: number) => void
 }
  
  
 // One athlete in the coach's recruit list from JOIN across Interested + Athlete + HighSchool
 export interface Recruit {
   athleteID:         number
+  jerseyNumber:      number
   athleteName:       string
   athleteEmail:      string
   highSchool:        string | null

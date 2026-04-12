@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getCoach, editCoach } from '../api'
+import { getCoaches, editCoach } from '../api'
 
 export default function CoachesEditPage() {
-  const { id } = useParams<{ id: string }>()
+  const { name } = useParams<{ name: string }>()
   const navigate = useNavigate()
+  const coachName = name ? decodeURIComponent(name) : ''
+  const [coachID, setCoachID] = useState<number | null>(null)
 
   const [form, setForm] = useState({
     name:    '',
@@ -17,9 +19,12 @@ export default function CoachesEditPage() {
 
   // pre-populate the form with the existing coach data
   useEffect(() => {
-    if (!id) return
-    getCoach(Number(id))
-      .then(coach => {
+    if (!coachName) return
+    getCoaches()
+      .then(coaches => {
+        const coach = coaches.find(current => current.name === coachName)
+        if (!coach) throw new Error('Coach not found')
+        setCoachID(coach.id)
         setForm({
           name:    coach.name,
           email:   coach.email,
@@ -28,7 +33,7 @@ export default function CoachesEditPage() {
       })
       .catch(() => setError('Could not load coach.'))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [coachName])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -42,9 +47,14 @@ export default function CoachesEditPage() {
       return
     }
 
+    if (coachID == null) {
+      setError('Could not find coach ID.')
+      return
+    }
+
     setSaving(true)
     try {
-      await editCoach(Number(id), {
+      await editCoach(coachID, {
         name:    form.name.trim(),
         email:   form.email.trim(),
         phoneNo: form.phoneNo.trim(),
