@@ -122,6 +122,7 @@ export default function PlayerCard({ games }: PlayerCardProps) {
       {/* ── Info grid: two-column label / value ── */}
       <div style={s.infoGrid}>
         {[
+          { key: 'Jersey', val: `#${athlete.jerseyNumber}` },
           { key: 'School', val: athlete.highSchool},
           { key: 'Division', val: athlete.division ?? '—'},
           { key: 'Email', val: athlete.email},

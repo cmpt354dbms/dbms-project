@@ -123,9 +123,9 @@ def edit_athlete(athlete_id):
         # update Athlete table
         cur.execute("""
             UPDATE Athlete
-            SET name = ?, email = ?, highSchool = ?
+            SET name = ?, email = ?, highSchool = ?, jerseyNumber = ?
             WHERE id = ?
-        """, (data['name'], data['email'], data['highSchool'], athlete_id))
+        """, (data['name'], data['email'], data['highSchool'], data['jerseyNumber'], athlete_id))
 
         # update position - remove old, insert new
         if 'position' in data:
@@ -143,13 +143,18 @@ def edit_athlete(athlete_id):
         db.commit()
         return jsonify({ 'message': 'Athlete updated successfully' })
 
+    except sql.IntegrityError as e:
+        error_msg = str(e)
+        if 'jerseyNumber' in error_msg or 'UNIQUE' in error_msg:
+            return jsonify({ 'error': 'That jersey number is already taken at this school.' }), 400
+        return jsonify({ 'error': error_msg }), 400
     except sql.Error as e:
         return jsonify({ 'error': str(e) }), 400
     finally:
         db.close()
 
 # INSERT ATHLETE
-# executes SQL trigger 
+# executes SQL trigger
 # returns json response
 @athletes_bp.route('/athletes', methods=['POST'])
 def add_athlete():
@@ -158,24 +163,36 @@ def add_athlete():
         data = request.get_json()
         cur = db.cursor()
 
-        # insert into Athlete table
+        # auto-generate athlete ID (same pattern as game creation)
+        cur.execute("SELECT MAX(id) AS max_id FROM Athlete")
+        row = cur.fetchone()
+        max_id = row['max_id'] if row['max_id'] is not None else 200
+        new_id = max_id + 1
+
+        # insert into Athlete table with jerseyNumber
         cur.execute("""
-            INSERT INTO Athlete (id, name, email, highSchool)
-            VALUES (?, ?, ?, ?)
-        """, (data['id'], data['name'], data['email'], data['highSchool']))
+            INSERT INTO Athlete (id, name, email, highSchool, jerseyNumber)
+            VALUES (?, ?, ?, ?, ?)
+        """, (new_id, data['name'], data['email'], data['highSchool'], data['jerseyNumber']))
 
         # insert into position table
         position = data.get('position')
         if position == 'Guard':
-            cur.execute("INSERT INTO Guard (athleteID) VALUES (?)", (data['id'],))
+            cur.execute("INSERT INTO Guard (athleteID) VALUES (?)", (new_id,))
         elif position == 'Forward':
-            cur.execute("INSERT INTO Forward (athleteID) VALUES (?)", (data['id'],))
+            cur.execute("INSERT INTO Forward (athleteID) VALUES (?)", (new_id,))
         elif position == 'Centre':
-            cur.execute("INSERT INTO Centre (athleteID) VALUES (?)", (data['id'],))
+            cur.execute("INSERT INTO Centre (athleteID) VALUES (?)", (new_id,))
 
         db.commit()
         return jsonify({ 'message': 'Athlete added successfully' }), 201
 
+    except sql.IntegrityError as e:
+        db.rollback()
+        error_msg = str(e)
+        if 'jerseyNumber' in error_msg or 'UNIQUE' in error_msg:
+            return jsonify({ 'error': 'That jersey number is already taken at this school.' }), 400
+        return jsonify({ 'error': error_msg }), 400
     except sql.Error as e:
         db.rollback()
         return jsonify({ 'error': str(e) }), 400

@@ -165,7 +165,7 @@ export interface SchoolStat {
 
 // used for INSERT and UPDATE forms
 export interface AthleteFormData {
-  id?: number          // optional for update since it's in the URL
+  jerseyNumber: number | ''
   name: string
   email: string
   highSchool: string

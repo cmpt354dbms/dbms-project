@@ -12,7 +12,7 @@ export default function PlayerCardBrief({ athlete, onClick, onEdit, onDelete }: 
     <div className="athlete-card" onClick={onClick}>
       <div className="athlete-card-header">
         <div className="card-name">{athlete.name}</div>
-        <div className="card-id">#{athlete.id}</div>
+        <div className="card-id">#{athlete.jerseyNumber}</div>
       </div>
 
       <div className="athlete-card-body">

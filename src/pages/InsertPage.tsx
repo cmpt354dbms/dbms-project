@@ -4,7 +4,7 @@ import { addAthlete } from '../api'
 import type { AthleteFormData } from '../types'
 
 const emptyForm: AthleteFormData = {
-  id: undefined,
+  jerseyNumber: '',
   name: '',
   email: '',
   highSchool: '',
@@ -24,15 +24,15 @@ export default function AthleteInsertPage() {
   }, [])
 
   const handleSubmit = async () => {
-    if (!form.id || !form.name || !form.email || !form.highSchool) {
+    if (form.jerseyNumber === '' || !form.name || !form.email || !form.highSchool) {
       setError('All fields are required.')
       return
     }
     try {
-      await addAthlete({ ...form, id: form.id! })
+      await addAthlete({ ...form, jerseyNumber: Number(form.jerseyNumber) })
       navigate('/athletes')
-    } catch (e) {
-      setError('Failed to add athlete.')
+    } catch (e: any) {
+      setError(e.message || 'Failed to add athlete.')
     }
   }
 
@@ -42,11 +42,16 @@ export default function AthleteInsertPage() {
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       <div>
-        <label>ID</label>
+        <label>Jersey Number (0–99)</label>
         <input
           type="number"
-          value={form.id ?? ''}
-          onChange={e => setForm({ ...form, id: Number(e.target.value) })}
+          min={0}
+          max={99}
+          value={form.jerseyNumber}
+          onChange={e => {
+            const val = e.target.value === '' ? '' : Number(e.target.value)
+            setForm({ ...form, jerseyNumber: val as number | '' })
+          }}
         />
       </div>
 

@@ -7,6 +7,7 @@ export default function AthleteEditPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [form, setForm] = useState<AthleteFormData>({
+    jerseyNumber: '',
     name: '',
     email: '',
     highSchool: '',
@@ -28,6 +29,7 @@ export default function AthleteEditPage() {
       const found = athletes.find(a => a.id === Number(id))
       if (found) {
         setForm({
+          jerseyNumber: found.jerseyNumber,
           name: found.name,
           email: found.email,
           highSchool: found.highSchool,
@@ -40,24 +42,38 @@ export default function AthleteEditPage() {
   }, [id])
 
   const handleSubmit = async () => {
-    if (!form.name || !form.email || !form.highSchool) {
+    if (form.jerseyNumber === '' || !form.name || !form.email || !form.highSchool) {
       setError('All fields are required.')
       return
     }
     try {
-      await editAthlete(Number(id), form)
+      await editAthlete(Number(id), { ...form, jerseyNumber: Number(form.jerseyNumber) })
       navigate('/athletes')
-    } catch (e) {
-      setError('Failed to update athlete.')
+    } catch (e: any) {
+      setError(e.message || 'Failed to update athlete.')
     }
   }
 
   if (loading) return <p>Loading...</p>
-  if (error) return <p style={{ color: 'red' }}>{error}</p>
 
   return (
     <div>
       <h1>Edit Athlete</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      <div>
+        <label>Jersey Number (0–99)</label>
+        <input
+          type="number"
+          min={0}
+          max={99}
+          value={form.jerseyNumber}
+          onChange={e => {
+            const val = e.target.value === '' ? '' : Number(e.target.value)
+            setForm({ ...form, jerseyNumber: val as number | '' })
+          }}
+        />
+      </div>
 
       <div>
         <label>Name</label>
