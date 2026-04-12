@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAthletes, deleteAthlete, getAthleteGames, getAthletesFullFilmCoverage } from '../api'
+import { getAthletes, deleteAthlete, getAthleteGames, getAthletesFullFilmCoverage, getTournamentSummary } from '../api'
 import type { AthleteWithStats } from '../types'
 import PlayerCardBrief from '../components/PlayerCardBrief'
 import PlayerCard from '../components/PlayerCard'
@@ -56,41 +56,53 @@ export default function AthletesPage() {
   const [playerGames, setPlayerGames] = useState<AthleteWithStats[]>([])
   const [loadingPlayerGames, setLoadingPlayerGames] = useState(false)
 
+  const [summary, setSummary] = useState<{
+      totalAthletes: number
+      totalGames: number
+      highestPoints: number
+      avgPoints: number
+      avgRebounds: number
+      avgAssists: number
+      avgSteals: number
+    } | null>(null)
+
   // ─── Data Fetching ────────────────────────────────────────────
-  useEffect(() => {
-    getAthletes()
-      .then(athleteData => {
-        setAthletes(athleteData)
+useEffect(() => {
+  getAthletes()
+    .then(athleteData => {
+      setAthletes(athleteData)
+      const names = [...new Set(athleteData.map(a => a.highSchool))].sort()
+      setAllSchools(names)
+      setSelectedSchools(new Set(names))
+      const divs = [...new Set(athleteData.map(a => a.division).filter(Boolean))] as string[]
+      divs.sort()
+      setAllDivisions(divs)
+      setSelectedDivisions(new Set(divs))
+      const dates = athleteData
+        .map(a => a.gameDate)
+        .filter((d): d is string => Boolean(d))
+        .map(d => new Date(d).getTime())
+      if (dates.length > 0) {
+        const min = Math.min(...dates)
+        const max = Math.max(...dates)
+        setDateMin(min)
+        setDateMax(max)
+        setDateStart(min)
+        setDateEnd(max)
+      }
 
-        const names = [...new Set(athleteData.map(a => a.highSchool))].sort()
-        setAllSchools(names)
-        setSelectedSchools(new Set(names))
-
-        const divs = [...new Set(athleteData.map(a => a.division).filter(Boolean))] as string[]
-        divs.sort()
-        setAllDivisions(divs)
-        setSelectedDivisions(new Set(divs))
-
-        const dates = athleteData
-          .map(a => a.gameDate)
-          .filter((d): d is string => Boolean(d))
-          .map(d => new Date(d).getTime())
-        if (dates.length > 0) {
-          const min = Math.min(...dates)
-          const max = Math.max(...dates)
-          setDateMin(min)
-          setDateMax(max)
-          setDateStart(min)
-          setDateEnd(max)
-        }
-
-        // fetch film coverage IDs for division query filter
-        getAthletesFullFilmCoverage().then(data => {
-          setFilmCoverageIDs(new Set(data.map(a => a.id)))
-        })
+      // fetch film coverage IDs for division query filter
+      getAthletesFullFilmCoverage().then(data => {
+        setFilmCoverageIDs(new Set(data.map(a => a.id)))
       })
-      .finally(() => setLoading(false))
-  }, [])
+
+      // fetch tournament summary for stats banner
+      getTournamentSummary().then(data => {
+        setSummary(data)
+      })
+    })
+    .finally(() => setLoading(false))
+}, [])
 
   // ─── Handlers ─────────────────────────────────────────────────
 
@@ -149,7 +161,6 @@ export default function AthletesPage() {
       }
       return sortDir === 'asc' ? cmp : -cmp
     })
-
   // ─── Render ───────────────────────────────────────────────────
 
   if (loading) return <p className="page">Loading...</p>
@@ -163,6 +174,47 @@ export default function AthletesPage() {
           + Add Athlete
         </button>
       </div>
+
+<div className="page-nav">
+        <button className="secondary-button" onClick={() => navigate('/games')}>Games</button>
+        <button className="secondary-button" onClick={() => navigate('/colleges')}>Colleges</button>
+        <button className="secondary-button" onClick={() => navigate('/coaches')}>Coaches</button>
+      </div>
+
+      {/* ── Tournament Summary Banner ──────────────────────────── */}
+      {summary && (
+        <div className="stats-banner">
+          <div className="stats-banner-title">Athlete Stats Summary</div>
+          <div className="stats-banner-item">
+            <span className="stats-banner-val">{summary.totalAthletes}</span>
+            <span className="stats-banner-lbl">Athletes</span>
+          </div>
+          <div className="stats-banner-item">
+            <span className="stats-banner-val">{summary.totalGames}</span>
+            <span className="stats-banner-lbl">Games</span>
+          </div>
+          <div className="stats-banner-item">
+            <span className="stats-banner-val">{summary.highestPoints}</span>
+            <span className="stats-banner-lbl">Top Score</span>
+          </div>
+          <div className="stats-banner-item">
+            <span className="stats-banner-val">{summary.avgPoints}</span>
+            <span className="stats-banner-lbl">Avg PTS</span>
+          </div>
+          <div className="stats-banner-item">
+            <span className="stats-banner-val">{summary.avgRebounds}</span>
+            <span className="stats-banner-lbl">Avg REB</span>
+          </div>
+          <div className="stats-banner-item">
+            <span className="stats-banner-val">{summary.avgAssists}</span>
+            <span className="stats-banner-lbl">Avg AST</span>
+          </div>
+          <div className="stats-banner-item">
+            <span className="stats-banner-val">{summary.avgSteals}</span>
+            <span className="stats-banner-lbl">Avg STL</span>
+          </div>
+        </div>
+      )}
 
       {/* ── Filter Bar ─────────────────────────────────────────── */}
       <div className="filter-bar">
