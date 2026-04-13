@@ -2,6 +2,10 @@
 
 A basketball recruiting management system built with React (TypeScript) + Flask + SQLite.
 
+## YOUTUBE LINKS (FOR GRADING)
+- implementation demo: https://www.youtube.com/watch?v=vKmmI4Z9uKQ
+- application demo: https://www.youtube.com/watch?v=KH9YJLP8nOs
+
 ## Prerequisites
 - Python 3.12+
 - Node.js 22+
