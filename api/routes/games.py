@@ -275,17 +275,15 @@ def edit_game(game_id):
     try:
         data = request.get_json()
         cur = db.cursor()
-        
-        # Delete old stats
+    
         cur.execute("DELETE FROM GameStats WHERE gameID = ?", (game_id,))
         
-        # Re-inserting edited stats fires the INSERT trigger
         insert_stats(cur, game_id, data.get('teams', []))
         
         db.commit()
         return jsonify({'message': 'Updated successfully'})
     except sql.Error as e:
-        db.rollback() # Important! Prevents stats from staying deleted if edit fails
+        db.rollback() 
         return jsonify({'error': str(e)}), 400
 
 @games_bp.route('/games/<int:game_id>', methods=['DELETE'])

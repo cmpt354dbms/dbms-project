@@ -14,6 +14,66 @@ def get_db_conn():
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
+# GET all game rows for one athlete (most recent first)
+# executes JOINs to return detailed per-game stats for the modal view
+# returns one JSON row per game for the requested athlete id
+@athletes_bp.route('/athletes/<int:athlete_id>/games', methods=['GET'])
+def get_athlete_games(athlete_id):
+    db = get_db_conn()
+    try:
+        cur = db.cursor()
+        cur.execute("""
+            SELECT a.id, a.name, a.email, a.highSchool, a.jerseyNumber, h.division,
+                CASE
+                    WHEN g.athleteID IS NOT NULL THEN 'Guard'
+                    WHEN f.athleteID IS NOT NULL THEN 'Forward'
+                    WHEN c.athleteID IS NOT NULL THEN 'Centre'
+                    ELSE NULL
+                END AS position,
+                gs.points, gs.rebounds, gs.assists, gs.steals,
+                gs.blocks, gs.fouls, gs.shotsMade, gs.shotsAttempted,
+                gs.threePointersMade, gs.freeThrowsMade, gs.freeThrowsAttempted,
+                gs.gameID, gm.gameDate
+            FROM Athlete a
+            LEFT JOIN HighSchool h ON a.highSchool = h.name
+            LEFT JOIN Guard g ON a.id = g.athleteID
+            LEFT JOIN Forward f ON a.id = f.athleteID
+            LEFT JOIN Centre c ON a.id = c.athleteID
+            LEFT JOIN GameStats gs ON a.id = gs.athleteID
+            LEFT JOIN Game gm ON gs.gameID = gm.gameID
+            WHERE a.id = ?
+            ORDER BY gm.gameDate DESC
+        """, (athlete_id,))
+        rows = cur.fetchall()
+        return jsonify([dict(row) for row in rows])
+    finally:
+        db.close()
+
+# GET tournament-wide summary stats
+# executes SQL AGGREGATION (no GROUP BY) across all game stats
+# returns a single row with tournament totals and averages
+@athletes_bp.route('/stats/tournament-summary', methods=['GET'])
+def get_tournament_summary():
+    db = get_db_conn()
+    try:
+        cur = db.cursor()
+        cur.execute("""
+            SELECT
+                COUNT(DISTINCT gs.athleteID) AS totalAthletes,
+                COUNT(DISTINCT gs.gameID)    AS totalGames,
+                MAX(gs.points)               AS highestPoints,
+                ROUND(AVG(gs.points), 1)     AS avgPoints,
+                ROUND(AVG(gs.rebounds), 1)   AS avgRebounds,
+                ROUND(AVG(gs.assists), 1)    AS avgAssists,
+                ROUND(AVG(gs.steals), 1)     AS avgSteals
+            FROM GameStats gs
+        """)
+        row = cur.fetchone()
+        return jsonify(dict(row))
+    finally:
+        db.close()
+
+
 # GET all athletes with one row per athlete
 # executes JOINs for profile fields and aggregates game stats (AVG/MAX) SQL AGGREGATION GROUP BY QUERY
 # returns summary data for the athletes list view
@@ -59,36 +119,32 @@ def get_athletes():
     finally:
         db.close()
 
-# GET all game rows for one athlete (most recent first)
-# executes JOINs to return detailed per-game stats for the modal view
-# returns one JSON row per game for the requested athlete id
-@athletes_bp.route('/athletes/<int:athlete_id>/games', methods=['GET'])
-def get_athlete_games(athlete_id):
+# get Athletes who have film uploaded 
+# executes SQL DIVISION on athlete using athlete_id
+# returns json response
+@athletes_bp.route('/athletes/full-film-coverage', methods=['GET'])
+def get_athletes_full_film_coverage():
     db = get_db_conn()
     try:
         cur = db.cursor()
         cur.execute("""
-            SELECT a.id, a.name, a.email, a.highSchool, a.jerseyNumber, h.division,
-                CASE
-                    WHEN g.athleteID IS NOT NULL THEN 'Guard'
-                    WHEN f.athleteID IS NOT NULL THEN 'Forward'
-                    WHEN c.athleteID IS NOT NULL THEN 'Centre'
-                    ELSE NULL
-                END AS position,
-                gs.points, gs.rebounds, gs.assists, gs.steals,
-                gs.blocks, gs.fouls, gs.shotsMade, gs.shotsAttempted,
-                gs.threePointersMade, gs.freeThrowsMade, gs.freeThrowsAttempted,
-                gs.gameID, gm.gameDate
+            SELECT a.id, a.name, a.email, a.highSchool, a.jerseyNumber
             FROM Athlete a
-            LEFT JOIN HighSchool h ON a.highSchool = h.name
-            LEFT JOIN Guard g ON a.id = g.athleteID
-            LEFT JOIN Forward f ON a.id = f.athleteID
-            LEFT JOIN Centre c ON a.id = c.athleteID
-            LEFT JOIN GameStats gs ON a.id = gs.athleteID
-            LEFT JOIN Game gm ON gs.gameID = gm.gameID
-            WHERE a.id = ?
-            ORDER BY gm.gameDate DESC
-        """, (athlete_id,))
+            WHERE NOT EXISTS (
+                SELECT gameID FROM GameStats gs
+                WHERE gs.athleteID = a.id
+                AND NOT EXISTS (
+                    SELECT 1 FROM GameFilm gf
+                    WHERE gf.athleteID = a.id
+                    AND gf.gameID = gs.gameID
+                )
+            )
+            AND EXISTS (
+                SELECT 1 FROM GameStats gs2
+                WHERE gs2.athleteID = a.id
+            )
+            ORDER BY a.name ASC
+        """)
         rows = cur.fetchall()
         return jsonify([dict(row) for row in rows])
     finally:
@@ -210,60 +266,5 @@ def get_schools():
         cur.execute("SELECT name FROM HighSchool")
         rows = cur.fetchall()
         return jsonify([dict(row) for row in rows])
-    finally:
-        db.close()
-
-# get Athletes who have film uploaded 
-# executes SQL DIVISION on athlete using athlete_id
-# returns json response
-@athletes_bp.route('/athletes/full-film-coverage', methods=['GET'])
-def get_athletes_full_film_coverage():
-    db = get_db_conn()
-    try:
-        cur = db.cursor()
-        cur.execute("""
-            SELECT a.id, a.name, a.email, a.highSchool, a.jerseyNumber
-            FROM Athlete a
-            WHERE NOT EXISTS (
-                SELECT gameID FROM GameStats gs
-                WHERE gs.athleteID = a.id
-                AND NOT EXISTS (
-                    SELECT 1 FROM GameFilm gf
-                    WHERE gf.athleteID = a.id
-                    AND gf.gameID = gs.gameID
-                )
-            )
-            AND EXISTS (
-                SELECT 1 FROM GameStats gs2
-                WHERE gs2.athleteID = a.id
-            )
-            ORDER BY a.name ASC
-        """)
-        rows = cur.fetchall()
-        return jsonify([dict(row) for row in rows])
-    finally:
-        db.close()
-
-# GET tournament-wide summary stats
-# executes SQL AGGREGATION (no GROUP BY) across all game stats
-# returns a single row with tournament totals and averages
-@athletes_bp.route('/stats/tournament-summary', methods=['GET'])
-def get_tournament_summary():
-    db = get_db_conn()
-    try:
-        cur = db.cursor()
-        cur.execute("""
-            SELECT
-                COUNT(DISTINCT gs.athleteID) AS totalAthletes,
-                COUNT(DISTINCT gs.gameID)    AS totalGames,
-                MAX(gs.points)               AS highestPoints,
-                ROUND(AVG(gs.points), 1)     AS avgPoints,
-                ROUND(AVG(gs.rebounds), 1)   AS avgRebounds,
-                ROUND(AVG(gs.assists), 1)    AS avgAssists,
-                ROUND(AVG(gs.steals), 1)     AS avgSteals
-            FROM GameStats gs
-        """)
-        row = cur.fetchone()
-        return jsonify(dict(row))
     finally:
         db.close()
