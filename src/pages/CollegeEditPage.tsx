@@ -114,7 +114,7 @@ export default function CollegeEditPage() {
             <option value="">No coach</option>
             {availableCoaches.map(coach => (
               <option key={coach.id} value={coach.id}>
-                {coach.name} #{coach.id}
+                {coach.name}
               </option>
             ))}
           </select>
